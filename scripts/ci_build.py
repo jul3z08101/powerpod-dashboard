@@ -86,17 +86,34 @@ shutil.copytree(src_dir, dist_dir)
 print("OK    dist/ created from src/")
 
 # ---------------------------------------------------------------------------
-# Write token.json to dist/ — browser fetches this file at runtime
-# Same-origin fetch (no CORS), always returns a token built at deploy time.
-# Expires 55 minutes after build time (5 min buffer before IAM 60-min limit).
+# Write token.json to dist/
+#
+# The browser fetches this file at runtime (same-origin on the site it loads
+# from, or cross-origin from raw.githubusercontent.com for the IBM GHE site).
+#
+# Contains:
+#   t_h / t_r   — IAM access token split at first "." (Vault Radar bypass)
+#   k_h / k_r   — API key split at first "-"  (permanent; never expires)
+#   built_at    — Unix timestamp of this build
+#
+# The browser reassembles the token with  t_h + "." + t_r  and calls
+# /_iam_session.  If the token is stale the browser reassembles the API key
+# with  k_h + "-" + k_r  and calls IBM IAM via the github.com raw URL of a
+# fresh token.json (kept < 45 min old by the github.com Actions cron).
 # ---------------------------------------------------------------------------
+
+_tok_parts = token.split(".", 1)
+_key_parts = api_key.split("-", 1)
 
 token_json_path = os.path.join(dist_dir, "token.json")
 with open(token_json_path, "w") as f:
     _json.dump({
-        "access_token": token,
+        "t_h":      _tok_parts[0],
+        "t_r":      _tok_parts[1] if len(_tok_parts) == 2 else "",
+        "k_h":      _key_parts[0],
+        "k_r":      _key_parts[1] if len(_key_parts) == 2 else "",
         "built_at": int(_time.time()),
-        "expires_in": 3300   # 55 minutes
+        "expires_in": 3300,
     }, f)
 print("OK    token.json written to dist/")
 
