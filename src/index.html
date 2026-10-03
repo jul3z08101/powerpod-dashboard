@@ -991,30 +991,25 @@ const CONFIG = {
 };
 
 // =============================================================================
-// In-browser IAM token refresh
-// Silently fetches a fresh token every 50 minutes using the API key injected
-// at build time. Updates CONFIG.iamToken in place — all Cloudant calls pick
-// it up automatically. Runs only when the tab is visible.
+// Token refresh via token.json (same-origin fetch — no CORS issues)
+// The GitHub Actions workflow writes a fresh token to token.json at every deploy.
+// The browser fetches it here — same domain, no IAM CORS block.
+// Falls back to the baked-in token if token.json is unavailable.
 // =============================================================================
 async function refreshIamToken() {
-  const apiKey = CONFIG.apiKey || "";
-  if (!apiKey) return;
   try {
-    const res = await fetch("https://iam.cloud.ibm.com/identity/token", {
-      method:  "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body:    "grant_type=urn%3Aibm%3Aparams%3Aoauth%3Agrant-type%3Aapikey&apikey=" + encodeURIComponent(apiKey),
-    });
+    const res = await fetch("token.json?t=" + Date.now(), { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
-      if (data.access_token) CONFIG.iamToken = data.access_token;
+      if (data.access_token) {
+        CONFIG.iamToken = data.access_token;
+        return;
+      }
     }
-  } catch (_) { /* silently ignore — existing token remains active */ }
+  } catch (_) { /* fall through to baked-in token */ }
 }
 
-// Refresh immediately on load — handles stale baked-in token after w3 re-login.
-// refreshData() also calls refreshIamToken() before every Cloudant fetch (every 5 min),
-// so no separate interval timer is needed.
+// Fetch fresh token immediately on load before any Cloudant call
 refreshIamToken();
 
 // =============================================================================

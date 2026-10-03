@@ -66,6 +66,9 @@ if r.status_code != 200:
     print(f"FAIL  IAM token request returned HTTP {r.status_code}")
     sys.exit(1)
 
+import json as _json
+import time as _time
+
 token = r.json()["access_token"]
 print(f"OK    Token received ({r.elapsed.total_seconds():.2f}s)")
 
@@ -81,6 +84,21 @@ if os.path.exists(dist_dir):
 
 shutil.copytree(src_dir, dist_dir)
 print("OK    dist/ created from src/")
+
+# ---------------------------------------------------------------------------
+# Write token.json to dist/ — browser fetches this file at runtime
+# Same-origin fetch (no CORS), always returns a token built at deploy time.
+# Expires 55 minutes after build time (5 min buffer before IAM 60-min limit).
+# ---------------------------------------------------------------------------
+
+token_json_path = os.path.join(dist_dir, "token.json")
+with open(token_json_path, "w") as f:
+    _json.dump({
+        "access_token": token,
+        "built_at": int(_time.time()),
+        "expires_in": 3300   # 55 minutes
+    }, f)
+print("OK    token.json written to dist/")
 
 # ---------------------------------------------------------------------------
 # Inject token and PIN into HTML files
