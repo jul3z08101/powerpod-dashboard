@@ -862,14 +862,39 @@ const CONFIG = {
 };
 
 // =============================================================================
-// Token refresh via token.json (same-origin fetch — no CORS issues)
+// refreshIamToken — always-on, deploy-free token refresh
+// 1. Same-origin token.json  →  2. github.com raw URL (CORS: *)  →  3. baked-in token
+// After a fresh token is obtained, exchanges it for a Cloudant IAMSession cookie.
+// The cookie auto-renews on every Cloudant request — session never expires while open.
+// Called on load, every 5 min (progress.html), and on tab focus.
 // =============================================================================
+const RAW_TOKEN_URL =
+  "https://raw.githubusercontent.com/jul3z08101/powerpod-dashboard/gh-pages/token.json";
+const TOKEN_MAX_AGE_S = 3000;
+
+async function fetchTokenJson(url) {
+  const res = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const tok = data.t_h && data.t_r ? (data.t_h + "." + data.t_r)
+            : data.access_token || "";
+  const age = data.built_at ? (Date.now() / 1000 - data.built_at) : 9999;
+  return (tok && age < TOKEN_MAX_AGE_S) ? tok : null;
+}
+
 async function refreshIamToken() {
   try {
-    const res = await fetch("token.json?t=" + Date.now(), { cache: "no-store" });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.access_token) { CONFIG.iamToken = data.access_token; return; }
+    let tok = await fetchTokenJson("token.json").catch(() => null);
+    if (!tok) tok = await fetchTokenJson(RAW_TOKEN_URL).catch(() => null);
+    if (!tok) tok = CONFIG.iamToken;
+    if (tok) {
+      CONFIG.iamToken = tok;
+      await fetch(`${CONFIG.cloudantUrl}/_iam_session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: tok }),
+        credentials: "include",
+      }).catch(() => {});
     }
   } catch (_) { /* fall through to baked-in token */ }
 }
@@ -916,7 +941,7 @@ const Cloudant = {
   async fetchAll(db) {
     const res = await fetch(
       `${CONFIG.cloudantUrl}/${db}/_all_docs?include_docs=true`,
-      { headers: this.headers() }
+      { headers: this.headers(), credentials: "include" }
     );
     if (!res.ok) throw new Error(`Cloudant ${db}: HTTP ${res.status}`);
     const data = await res.json();
@@ -924,14 +949,14 @@ const Cloudant = {
   },
 
   async get(db, id) {
-    const res = await fetch(`${CONFIG.cloudantUrl}/${db}/${id}`, { headers: this.headers() });
+    const res = await fetch(`${CONFIG.cloudantUrl}/${db}/${id}`, { headers: this.headers(), credentials: "include" });
     if (!res.ok) throw new Error(`Cloudant GET ${db}/${id}: HTTP ${res.status}`);
     return res.json();
   },
 
   async put(db, id, doc) {
     const res = await fetch(`${CONFIG.cloudantUrl}/${db}/${id}`, {
-      method: "PUT", headers: this.headers(), body: JSON.stringify(doc),
+      method: "PUT", headers: this.headers(), body: JSON.stringify(doc), credentials: "include",
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -945,7 +970,7 @@ const Cloudant = {
     const doc = await this.get(db, id);
     const res = await fetch(
       `${CONFIG.cloudantUrl}/${db}/${encodeURIComponent(id)}?rev=${encodeURIComponent(doc._rev)}`,
-      { method: "DELETE", headers: this.headers() }
+      { method: "DELETE", headers: this.headers(), credentials: "include" }
     );
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
