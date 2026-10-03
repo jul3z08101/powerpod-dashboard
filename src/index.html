@@ -991,20 +991,58 @@ const CONFIG = {
 };
 
 // =============================================================================
-// Token refresh via token.json (same-origin fetch — no CORS issues)
-// The GitHub Actions workflow writes a fresh token to token.json at every deploy.
-// The browser fetches it here — same domain, no IAM CORS block.
-// Falls back to the baked-in token if token.json is unavailable.
+// refreshIamToken — always-on, deploy-free token refresh
+//
+// Priority order:
+//   1. Same-origin token.json (fresh if this site was recently deployed)
+//   2. Cross-origin token.json from the github.com gh-pages branch
+//      (raw.githubusercontent.com, CORS: *, refreshed every ~45 min by cron)
+//   3. Baked-in window.__CLOUDANT_TOKEN__ (last resort — may be stale)
+//
+// After obtaining a fresh token the browser POSTs it to Cloudant /_iam_session
+// to get an IAMSession cookie. The cookie auto-renews on every Cloudant request
+// so once the session is established it never expires while the page is open.
+//
+// refreshIamToken() is called on load, every 5 min, and on tab focus —
+// so even a tab left open overnight re-establishes the session on return.
 // =============================================================================
+const RAW_TOKEN_URL =
+  "https://raw.githubusercontent.com/jul3z08101/powerpod-dashboard/gh-pages/token.json";
+const TOKEN_MAX_AGE_S = 3000; // treat token as stale if built > 50 min ago
+
+async function fetchTokenJson(url) {
+  const res = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const tok = data.t_h && data.t_r ? (data.t_h + "." + data.t_r)
+            : data.access_token || "";
+  const age = data.built_at ? (Date.now() / 1000 - data.built_at) : 9999;
+  return (tok && age < TOKEN_MAX_AGE_S) ? tok : null;
+}
+
 async function refreshIamToken() {
   try {
-    const res = await fetch("token.json?t=" + Date.now(), { cache: "no-store" });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.access_token) {
-        CONFIG.iamToken = data.access_token;
-        return;
-      }
+    // 1. Try same-origin token.json first
+    let tok = await fetchTokenJson("token.json").catch(() => null);
+
+    // 2. If stale or missing, try the github.com raw URL (CORS: *)
+    if (!tok) {
+      tok = await fetchTokenJson(RAW_TOKEN_URL).catch(() => null);
+    }
+
+    // 3. Fall back to baked-in token
+    if (!tok) tok = CONFIG.iamToken;
+
+    if (tok) {
+      CONFIG.iamToken = tok;
+      // Exchange for a Cloudant IAMSession cookie — auto-renews on every request.
+      // Cloudant CORS allows pages.github.ibm.com; credentials:"include" stores cookie.
+      await fetch(`${CONFIG.cloudantUrl}/_iam_session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: tok }),
+        credentials: "include",
+      }).catch(() => {/* cookie exchange failed — Bearer header still active */});
     }
   } catch (_) { /* fall through to baked-in token */ }
 }
@@ -1025,7 +1063,7 @@ const Cloudant = {
   async fetchAll(db) {
     const res = await fetch(
       `${CONFIG.cloudantUrl}/${db}/_all_docs?include_docs=true`,
-      { headers: this.headers() }
+      { headers: this.headers(), credentials: "include" }
     );
     if (!res.ok) throw new Error(`Cloudant ${db}: HTTP ${res.status}`);
     return (await res.json()).rows.map(r => r.doc);
