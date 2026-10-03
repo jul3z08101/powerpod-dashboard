@@ -3,15 +3,22 @@ name: Deploy Power Pod Dashboard
 on:
   workflow_dispatch:
   schedule:
-    # Every 45 minutes, 24/7 — IAM token always fresh, no Mac required
+    # Every 45 minutes, 24/7 — token.json always < 45 min old.
+    # Keepalive commit below prevents GitHub from throttling this schedule.
     - cron: "0,45 * * * *"
+
+permissions:
+  contents: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -29,6 +36,18 @@ jobs:
           K_REST:          ${{ secrets.K_REST }}
           ADMIN_PIN:       ${{ secrets.ADMIN_PIN }}
         run: python3 scripts/ci_build.py
+
+      # Keepalive: commit a timestamp to main so GitHub never throttles this cron.
+      # Without this, GitHub considers the repo inactive and runs the schedule
+      # only every ~6 hours instead of every 45 minutes.
+      - name: Keepalive commit (prevents cron throttling)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > .keepalive
+          git add .keepalive
+          git diff --cached --quiet || git commit -m "chore: keepalive [skip ci]"
+          git push
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
