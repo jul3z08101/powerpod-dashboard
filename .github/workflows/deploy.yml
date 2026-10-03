@@ -1,0 +1,42 @@
+name: Deploy Power Pod Dashboard
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 45 minutes, 24/7 — IAM token always fresh, no Mac required
+    - cron: "0,45 * * * *"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout IBM GHE source
+        uses: actions/checkout@v4
+        with:
+          repository: Julienne-Charles/Powerpod
+          token: ${{ secrets.GHE_PAT }}
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Build dist/
+        env:
+          CLOUDANT_APIKEY: ${{ secrets.CLOUDANT_APIKEY }}
+          CLOUDANT_URL:    ${{ secrets.CLOUDANT_URL }}
+          K_HEAD:          ${{ secrets.K_HEAD }}
+          K_REST:          ${{ secrets.K_REST }}
+        run: python3 scripts/ci_build.py
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir:  ./dist
+          publish_branch: gh-pages
+          force_orphan: true
