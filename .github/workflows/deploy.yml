@@ -10,12 +10,8 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout IBM GHE source
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          repository: Julienne-Charles/Powerpod
-          token: ${{ secrets.GHE_PAT }}
-          ref: main
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -31,6 +27,7 @@ jobs:
           CLOUDANT_URL:    ${{ secrets.CLOUDANT_URL }}
           K_HEAD:          ${{ secrets.K_HEAD }}
           K_REST:          ${{ secrets.K_REST }}
+          ADMIN_PIN:       ${{ secrets.ADMIN_PIN }}
         run: python3 scripts/ci_build.py
 
       - name: Deploy to gh-pages

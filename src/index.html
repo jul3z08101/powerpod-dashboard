@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BWF&amp;O Power Pod — Goals Program 2026</title>
+  <style>
+    /* -----------------------------------------------------------------------
+       Design tokens
+    ----------------------------------------------------------------------- */
+    :root {
+      --color-bg:           #ffffff;
+      --color-surface:      #f7f6fb;
+      --color-surface-alt:  #f0edf8;
+      --color-border:       #e0daea;
+      --color-text:         #1a1523;
+      --color-text-muted:   #6b6478;
+      --color-accent:       #7c5cd8;
+      --color-accent-light: #ede9f9;
+      --color-accent-dark:  #5a3fb5;
+
+      --status-not-started: #9ca3af;
+      --status-in-progress: #3b82f6;
+      --status-on-track:    #22c55e;
+      --status-at-risk:     #f59e0b;
+      --status-blocked:     #ef4444;
+      --status-completed:   #16a34a;
+
+      --radius:    8px;
+      --radius-lg: 12px;
+      --shadow:    0 1px 4px rgba(0,0,0,0.08);
+      --shadow-md: 0 2px 10px rgba(0,0,0,0.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      background: var(--color-surface);
+      color: var(--color-text);
+      min-height: 100vh;
+    }
+
+    a { color: var(--color-accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* -----------------------------------------------------------------------
+       Hero banner (replaces header)
+    ----------------------------------------------------------------------- */
+    .app-hero {
+      position: relative;
+      width: 100%;
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .app-hero__img {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center 35%;
+    }
+
+    .app-hero__overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(90,63,181,0.82) 0%, rgba(124,92,216,0.70) 100%);
+    }
+
+    .app-hero__content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px 32px 36px;
+    }
+
+    .app-hero__eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.72);
+      margin-bottom: 10px;
+    }
+
+    .app-hero__title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .app-hero__subtitle {
+      font-size: 15px;
+      color: rgba(255,255,255,0.82);
+      line-height: 1.5;
+    }
+
+    /* Slim action bar below hero */
+    .app-bar {
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      height: 48px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      gap: 10px;
+    }
+
+    /* -----------------------------------------------------------------------
+       Page nav tabs
+    ----------------------------------------------------------------------- */
+    .page-nav {
+      display: flex;
+      border-bottom: 2px solid var(--color-border);
+      margin-bottom: 28px;
+      gap: 0;
+    }
+
+    .page-nav__btn {
+      padding: 10px 22px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .page-nav__btn:hover { color: var(--color-text); }
+
+    .page-nav__btn.active {
+      color: var(--color-accent);
+      border-bottom-color: var(--color-accent);
+    }
+
+    /* -----------------------------------------------------------------------
+       Guide page
+    ----------------------------------------------------------------------- */
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .guide-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .guide-card__title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-accent);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .guide-card__body {
+      font-size: 13px;
+      color: var(--color-text);
+      line-height: 1.65;
+    }
+
+    .guide-card__body p + p { margin-top: 6px; }
+
+    .guide-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .guide-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-text-muted);
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .guide-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: top;
+    }
+
+    .guide-table tr:last-child td { border-bottom: none; }
+    .guide-table td:first-child { font-weight: 600; }
+
+    /* Do / Don't list layout */
+    .dos-donts { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+    .dos-donts__section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 5px 10px 6px;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .dos-donts__section-label--do {
+      background: #e8f5ee;
+      color: #166534;
+      border-bottom: 1px solid #bbf7d0;
+    }
+
+    .dos-donts__section-label--dont {
+      background: #fef2f2;
+      color: #991b1b;
+      border-bottom: 1px solid #fecaca;
+    }
+
+    .dos-donts__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border: 1px solid var(--color-border);
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      overflow: hidden;
+    }
+
+    .dos-donts__list li {
+      padding: 8px 12px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--color-border);
+      line-height: 1.45;
+    }
+
+    .dos-donts__list li:last-child { border-bottom: none; }
+
+    .dos-donts__list--do li::before {
+      content: "";
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #16a34a;
+      margin-right: 8px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    .dos-donts__list--dont li::before {
+      content: "";
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #dc2626;
+      margin-right: 8px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    .contact-row { display: flex; flex-direction: column; gap: 10px; }
+
+    .contact-item { display: flex; flex-direction: column; gap: 1px; }
+    .contact-item__name  { font-weight: 700; font-size: 13px; }
+    .contact-item__email { font-size: 12px; color: var(--color-text-muted); }
+    .contact-item__role  { font-size: 11px; color: var(--color-accent); font-weight: 600; }
+
+    /* -----------------------------------------------------------------------
+       Layout
+    ----------------------------------------------------------------------- */
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    .section { margin-bottom: 36px; }
+
+    .section-heading {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--color-text-muted);
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    /* -----------------------------------------------------------------------
+       Buttons
+    ----------------------------------------------------------------------- */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 18px;
+      border-radius: var(--radius);
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none;
+      transition: background 0.15s, opacity 0.15s;
+      line-height: 1;
+    }
+
+    .btn--primary { background: var(--color-accent); color: #ffffff; }
+    .btn--primary:hover { background: var(--color-accent-dark); }
+
+    .btn--ghost {
+      background: transparent; color: var(--color-accent);
+      border: 1px solid var(--color-border);
+    }
+    .btn--ghost:hover { background: var(--color-accent-light); }
+
+    .btn--sm { padding: 5px 12px; font-size: 12px; }
+
+    /* -----------------------------------------------------------------------
+       Summary bar
+    ----------------------------------------------------------------------- */
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-card__value {
+      font-size: 28px; font-weight: 700;
+      color: var(--color-accent); line-height: 1; margin-bottom: 4px;
+    }
+
+    .stat-card__label {
+      font-size: 11px; color: var(--color-text-muted);
+      font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+
+    /* -----------------------------------------------------------------------
+       Charts row
+    ----------------------------------------------------------------------- */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
+      margin-bottom: 36px;
+    }
+
+    .chart-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .chart-card__title {
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--color-text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* -----------------------------------------------------------------------
+       SVG donut chart
+    ----------------------------------------------------------------------- */
+    .donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .donut-wrap svg { flex-shrink: 0; }
+
+    .donut-legend { display: flex; flex-direction: column; gap: 6px; }
+
+    .legend-item {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 12px; color: var(--color-text-muted);
+    }
+
+    .legend-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    .legend-item__count { font-weight: 700; color: var(--color-text); }
+
+    /* -----------------------------------------------------------------------
+       Pod bar chart (pure CSS/SVG)
+    ----------------------------------------------------------------------- */
+    .pod-bars { display: flex; flex-direction: column; gap: 10px; }
+
+    .pod-bar-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .pod-bar-label {
+      font-size: 12px; font-weight: 600;
+      width: 72px; flex-shrink: 0; color: var(--color-text);
+    }
+
+    .pod-bar-track {
+      flex: 1; height: 22px;
+      background: var(--color-surface-alt);
+      border-radius: 4px; overflow: hidden;
+      position: relative;
+    }
+
+    .pod-bar-fill {
+      height: 100%;
+      background: var(--color-accent);
+      border-radius: 4px;
+      transition: width 0.6s ease;
+      display: flex; align-items: center; justify-content: flex-end;
+      padding-right: 6px;
+    }
+
+    .pod-bar-pct {
+      font-size: 11px; font-weight: 700; color: #ffffff;
+      white-space: nowrap;
+    }
+
+    .pod-bar-pct-outside {
+      font-size: 11px; font-weight: 600; color: var(--color-text-muted);
+      min-width: 32px;
+    }
+
+    /* -----------------------------------------------------------------------
+       Leading the Way (top members)
+    ----------------------------------------------------------------------- */
+    .top-members {
+      margin-top: 28px;
+    }
+
+    .top-members__heading {
+      font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--color-text-muted); margin-bottom: 14px;
+    }
+
+    .top-members__list {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+
+    .top-member-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .top-member-rank {
+      font-size: 11px; font-weight: 700; color: var(--color-accent);
+      width: 18px; flex-shrink: 0; text-align: center;
+    }
+
+    .top-member-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--color-accent-light);
+      color: var(--color-accent-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+
+    .top-member-info { flex: 1; min-width: 0; }
+
+    .top-member-name {
+      font-size: 13px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .top-member-pod {
+      font-size: 11px; color: var(--color-text-muted);
+    }
+
+    .top-member-bar-wrap {
+      width: 90px; flex-shrink: 0;
+    }
+
+    .top-member-bar-track {
+      height: 6px; background: var(--color-surface-alt);
+      border-radius: 3px; overflow: hidden; margin-bottom: 2px;
+    }
+
+    .top-member-bar-fill {
+      height: 100%; background: var(--color-accent);
+      border-radius: 3px; transition: width 0.6s ease;
+    }
+
+    .top-member-score {
+      font-size: 10px; font-weight: 700;
+      color: var(--color-text-muted); text-align: right;
+    }
+
+    /* -----------------------------------------------------------------------
+       Pod selector
+    ----------------------------------------------------------------------- */
+    .pod-selector-row {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .pod-selector-row label {
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--color-text-muted);
+      white-space: nowrap;
+    }
+
+    .pod-select {
+      padding: 9px 36px 9px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      font-size: 14px; font-weight: 600;
+      color: var(--color-text);
+      background: var(--color-bg);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b6478' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      cursor: pointer;
+      min-width: 200px;
+    }
+
+    .pod-select:focus {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 1px;
+      border-color: transparent;
+    }
+
+    /* -----------------------------------------------------------------------
+       Pod detail panel
+    ----------------------------------------------------------------------- */
+    .pod-panel {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .pod-panel__header {
+      background: var(--color-surface-alt);
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--color-border);
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 12px;
+    }
+
+    .pod-panel__name { font-size: 17px; font-weight: 700; }
+
+    .pod-panel__meta { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+
+    .pod-panel__progress-bar {
+      height: 5px; background: var(--color-border);
+      border-radius: 3px; overflow: hidden; margin-top: 8px; width: 200px;
+    }
+
+    .pod-panel__progress-fill {
+      height: 100%; background: var(--color-accent); border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    /* -----------------------------------------------------------------------
+       Member rows
+    ----------------------------------------------------------------------- */
+    .member-list { display: flex; flex-direction: column; }
+
+    .member-row {
+      border-bottom: 1px solid var(--color-border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .member-row:last-child { border-bottom: none; }
+    .member-row:hover { background: var(--color-surface); }
+
+    .member-row__summary {
+      display: flex; align-items: center;
+      gap: 12px; padding: 12px 22px;
+    }
+
+    .member-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--color-accent-light);
+      color: var(--color-accent-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; flex-shrink: 0;
+      text-transform: uppercase;
+    }
+
+    .member-info { flex: 1; min-width: 0; }
+
+    .member-info__name {
+      font-size: 13px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .member-info__sub { font-size: 11px; color: var(--color-text-muted); }
+
+    .member-row__right {
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+
+    .progress-pill {
+      font-size: 11px; font-weight: 700;
+      color: var(--color-accent-dark);
+      background: var(--color-accent-light);
+      padding: 2px 8px; border-radius: 10px;
+    }
+
+    .expand-icon {
+      width: 18px; height: 18px;
+      color: var(--color-text-muted);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .member-row.expanded .expand-icon { transform: rotate(180deg); }
+
+    /* -----------------------------------------------------------------------
+       Member detail drawer
+    ----------------------------------------------------------------------- */
+    .member-drawer {
+      display: none;
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+      padding: 16px 22px 20px 70px;
+    }
+
+    .member-row.expanded .member-drawer { display: block; }
+
+    .drawer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .drawer-field__label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--color-text-muted); margin-bottom: 2px;
+    }
+
+    .drawer-field__value {
+      font-size: 13px; color: var(--color-text);
+    }
+
+    .drawer-field__value.empty {
+      color: var(--color-text-muted); font-style: italic;
+    }
+
+    .drawer-actions { margin-top: 12px; }
+
+    /* -----------------------------------------------------------------------
+       Status chip
+    ----------------------------------------------------------------------- */
+    .status-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 9px; border-radius: 12px;
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+    }
+
+    .status-chip::before {
+      content: ""; display: inline-block;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor; flex-shrink: 0;
+    }
+
+    .status--not-started { color: #4b5563; background: #f3f4f6; }
+    .status--in-progress { color: #1d4ed8; background: #dbeafe; }
+    .status--on-track    { color: #15803d; background: #dcfce7; }
+    .status--at-risk     { color: #b45309; background: #fef3c7; }
+    .status--blocked     { color: #b91c1c; background: #fee2e2; }
+    .status--completed   { color: #166534; background: #d1fae5; }
+
+    /* -----------------------------------------------------------------------
+       Loading / error states
+    ----------------------------------------------------------------------- */
+    .state-panel {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 64px 24px; color: var(--color-text-muted); gap: 12px;
+    }
+
+    .state-panel__title { font-size: 15px; font-weight: 600; color: var(--color-text); }
+    .state-panel__body  { font-size: 13px; text-align: center; max-width: 380px; }
+
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--color-border);
+      border-top-color: var(--color-accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* -----------------------------------------------------------------------
+       Responsive
+    ----------------------------------------------------------------------- */
+    @media (max-width: 720px) {
+      .app-bar { padding: 0 16px; }
+      .app-hero__title { font-size: 24px; }
+      .app-hero__content { padding: 32px 20px 28px; }
+      .main { padding: 20px 16px 48px; }
+      .charts-row { grid-template-columns: 1fr; }
+      .summary-bar { grid-template-columns: repeat(2, 1fr); }
+      .member-drawer { padding-left: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- =========================================================================
+     Header
+========================================================================== -->
+<div class="app-hero" role="banner">
+  <img class="app-hero__img" src="image/1.webp" alt="" aria-hidden="true" />
+  <div class="app-hero__overlay"></div>
+  <div class="app-hero__content">
+    <div class="app-hero__eyebrow">BWF&amp;O Power Pod &middot; Goals Program 2026</div>
+    <div class="app-hero__title">BWF&amp;O Power Pod</div>
+    <div class="app-hero__subtitle">Goals Program 2026</div>
+  </div>
+</div>
+<nav class="app-bar">
+  <button class="btn btn--ghost btn--sm" id="btn-admin">Admin</button>
+  <a href="progress.html" class="btn btn--primary btn--sm">My Progress</a>
+</nav>
+
+<!-- =========================================================================
+     Main
+========================================================================== -->
+<main class="main" id="main-content">
+
+  <div class="state-panel" id="loading-state">
+    <div class="spinner"></div>
+    <div class="state-panel__title">Loading program data</div>
+    <div class="state-panel__body">Connecting to IBM Cloudant ...</div>
+  </div>
+
+  <div id="dashboard-content" style="display:none">
+
+    <!-- Page nav -->
+    <nav class="page-nav" id="page-nav">
+      <button class="page-nav__btn active" data-page="overview">Program Overview</button>
+      <button class="page-nav__btn" data-page="guide">Guide</button>
+    </nav>
+
+    <!-- ----------------------------------------------------------------
+         Program Overview
+    ---------------------------------------------------------------- -->
+    <div class="section" id="page-overview">
+      <div class="section-heading">Program Overview</div>
+      <div class="summary-bar" id="summary-bar"></div>
+
+      <div class="charts-row">
+        <!-- Donut: status breakdown -->
+        <div class="chart-card">
+          <div class="chart-card__title">Goals by Status</div>
+          <div class="donut-wrap">
+            <svg id="donut-svg" width="120" height="120" viewBox="0 0 120 120"></svg>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+        </div>
+
+        <!-- Bar: pod engagement -->
+        <div class="chart-card">
+          <div class="chart-card__title">Pod Progress</div>
+          <div class="pod-bars" id="pod-bars"></div>
+          <div class="top-members" id="top-members"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ----------------------------------------------------------------
+         Pod drill-down (hidden by default; shown via tab nav)
+    ---------------------------------------------------------------- -->
+    <div class="section" id="page-pods-section" style="display:none">
+      <div class="section-heading">Accountability Pods</div>
+
+      <div class="pod-selector-row">
+        <label for="pod-select">Select a pod</label>
+        <select class="pod-select" id="pod-select">
+          <option value="">Select a pod ...</option>
+        </select>
+      </div>
+
+      <div id="pod-panel-container"></div>
+    </div>
+
+  <!-- ----------------------------------------------------------------
+       Guide page
+  ---------------------------------------------------------------- -->
+  <div id="page-guide" style="display:none">
+
+      <div class="section-heading">Participant Guide</div>
+
+      <div class="guide-grid">
+
+        <div class="guide-card">
+          <div class="guide-card__title">About the Power Pod</div>
+          <div class="guide-card__body">
+            <p>The Power Pod is a 3-session peer accountability program for women in BWF&amp;O. You set one career or skills-based goal, work toward it, and your pod holds you accountable.</p>
+            <p>This year we are focused on goals that move the needle at IBM: skilling up, visible projects, certifications, and measurable work outcomes.</p>
+            <p>No rankings. No judgment. Progress over perfection, always.</p>
+          </div>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card__title">Program Timeline</div>
+          <div class="guide-card__body">
+            <table class="guide-table">
+              <thead><tr><th>Session</th><th>Date</th><th>Focus</th></tr></thead>
+              <tbody>
+                <tr><td>Session 1</td><td>Oct 1</td><td>Set your goal and meet your pod</td></tr>
+                <tr><td>Session 2</td><td>Oct 22</td><td>Share progress and course corrections</td></tr>
+                <tr><td>Session 3</td><td>Nov 12</td><td>Celebrate your journey</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card__title">How to Use the Dashboard</div>
+          <div class="guide-card__body">
+            <p>1. Click <strong>My Progress</strong> at the top of the page.</p>
+            <p>2. Select your pod name, then your name.</p>
+            <p>3. Fill in your goal details under Session 1.</p>
+            <p>4. Click <strong>Save</strong> — your progress is stored instantly.</p>
+            <p>Return any time to update your status, add notes, or complete Session 2 and 3 fields.</p>
+          </div>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card__title">Pod Roles</div>
+          <div class="guide-card__body">
+            <table class="guide-table">
+              <thead><tr><th>Role</th><th>Responsibility</th></tr></thead>
+              <tbody>
+                <tr><td>Scheduler</td><td>You are in charge of scheduling your team's follow-up meetings</td></tr>
+                <tr><td>Notetaker</td><td>You will oversee the note taking, present progress to the broader team at midpoint and final meeting</td></tr>
+                <tr><td>Progress Tracker</td><td>Prior to the next session, you will collect percent-complete updates and notify the team on their progress</td></tr>
+                <tr><td>Goal Tracker</td><td>Prior to the next session, check to make sure everyone has filled out their 1-2 goals on the dashboard and remind them to make updates when needed</td></tr>
+                <tr><td>The Blocker Beater</td><td>You are in charge of tracking blockers and ensuring each individual knows how to get through them</td></tr>
+                <tr><td>Support Contact</td><td>You are the glue — fill in where needed should the team fall behind</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card__title">What Makes a Good Goal</div>
+          <div class="guide-card__body">
+            <p>Your goal should be <strong>SMART</strong>: Specific, Measurable, Achievable, Relevant, and Time-bound. Focus on skills, projects, certifications, and measurable work outcomes that get you to the next level at IBM.</p>
+            <p><strong>Example:</strong> By November 12, I will complete the IBM AI Fundamentals badge and present one key takeaway to my pod.</p>
+
+            <div class="dos-donts">
+              <div>
+                <div class="dos-donts__section-label dos-donts__section-label--do">Do</div>
+                <ul class="dos-donts__list dos-donts__list--do">
+                  <li>Grow a skill tied to your role (e.g., advanced Excel modeling by Nov. 15)</li>
+                  <li>Lead or contribute to a visible work project or process improvement</li>
+                  <li>Expand your professional network: 3 informational chats this quarter</li>
+                  <li>Earn a certification or complete a training relevant to your career path</li>
+                  <li>Improve a measurable work outcome (close cycle, reporting accuracy, turnaround time)</li>
+                </ul>
+              </div>
+              <div>
+                <div class="dos-donts__section-label dos-donts__section-label--dont">Not this</div>
+                <ul class="dos-donts__list dos-donts__list--dont">
+                  <li>Personal fitness or wellness targets (steps, gym, weight)</li>
+                  <li>Financial or budgeting goals outside of work</li>
+                  <li>Hobbies, travel plans, or side projects unrelated to your role</li>
+                  <li>Family, relationship, or household commitments</li>
+                  <li>Anything you would not be comfortable sharing publicly with the pod</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card__title">How Progress is Tracked</div>
+          <div class="guide-card__body">
+            <p>Your engagement score updates <strong>as soon as you fill in Session 1</strong> — no need to wait for Session 2. The pod progress bars and the "Leading the Way" section on the overview page reflect real activity from day one.</p>
+            <p>Points are spread across all three sessions so progress builds gradually to 100:</p>
+            <table class="guide-table">
+              <thead><tr><th>Action</th><th>Points</th></tr></thead>
+              <tbody>
+                <tr><td colspan="2" style="font-weight:700;color:var(--color-text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">Session 1 — up to 40 pts</td></tr>
+                <tr><td>Goal title filled in</td><td>10</td></tr>
+                <tr><td>SMART statement filled in</td><td>10</td></tr>
+                <tr><td>Category selected</td><td>5</td></tr>
+                <tr><td>Why it matters filled in</td><td>5</td></tr>
+                <tr><td>First action step filled in</td><td>5</td></tr>
+                <tr><td>Goal submitted to pod ✓</td><td>3</td></tr>
+                <tr><td>First action completed ✓</td><td>2</td></tr>
+                <tr><td colspan="2" style="font-weight:700;color:var(--color-text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding-top:10px">Session 2 — up to 40 pts</td></tr>
+                <tr><td>Percent complete (scales 0–25 with the slider)</td><td>0–25</td></tr>
+                <tr><td>S2 status: Completed</td><td>10</td></tr>
+                <tr><td>S2 status: On Track</td><td>7</td></tr>
+                <tr><td>S2 status: In Progress</td><td>5</td></tr>
+                <tr><td>S2 status: Not Started</td><td>2</td></tr>
+                <tr><td>S2 status: At Risk or Blocked</td><td>0</td></tr>
+                <tr><td>Course correction filled in</td><td>5</td></tr>
+                <tr><td colspan="2" style="font-weight:700;color:var(--color-text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding-top:10px">Session 3 — up to 20 pts</td></tr>
+                <tr><td>Final status: Completed</td><td>10</td></tr>
+                <tr><td>Final status: On Track</td><td>6</td></tr>
+                <tr><td>Final status: In Progress</td><td>4</td></tr>
+                <tr><td>Final status: Not Started</td><td>1</td></tr>
+                <tr><td>Final status: At Risk or Blocked</td><td>0</td></tr>
+                <tr><td>What you achieved filled in</td><td>5</td></tr>
+                <tr><td>Lesson learned filled in</td><td>5</td></tr>
+                <!-- S3 total = up to 10 (status) + 5 + 5 = 20 -->
+              </tbody>
+              <tfoot><tr><td><strong>Total possible</strong></td><td><strong>100</strong></td></tr></tfoot>
+            </table>
+            <p style="margin-top:10px">Complete all of Session 1 and you reach <strong>40 points</strong>. In Session 2, the percent-complete slider accounts for up to 25 of the 40 points — so moving it honestly matters. At-risk and blocked statuses earn 0 because they reflect being behind, not ahead. Full engagement across all three sessions brings you to <strong>100</strong>. The "Leading the Way" section features the top 3 most engaged participants.</p>
+          </div>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card__title">Key Contacts</div>
+          <div class="guide-card__body">
+            <div class="contact-row">
+              <div class="contact-item">
+                <span class="contact-item__name">Julienne Charles</span>
+                <span class="contact-item__email">Julienne.charles@ibm.com</span>
+              </div>
+              <div class="contact-item">
+                <span class="contact-item__name">June Hodge</span>
+                <span class="contact-item__email">June.Hodge@ibm.com</span>
+              </div>
+              <div class="contact-item">
+                <span class="contact-item__name">Nicoy Spence</span>
+                <span class="contact-item__email">nspence@us.ibm.com</span>
+              </div>
+              <div class="contact-item">
+                <span class="contact-item__name">Simi Fafowora</span>
+                <span class="contact-item__email">osobas@ng.ibm.com</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+    </div><!-- /guide-grid -->
+  </div><!-- /page-guide -->
+
+  </div><!-- /dashboard-content -->
+
+  <div class="state-panel" id="error-state" style="display:none">
+    <div class="state-panel__title">Unable to load data</div>
+    <div class="state-panel__body" id="error-message"></div>
+    <button class="btn btn--primary btn--sm" onclick="location.reload()">Retry</button>
+  </div>
+
+</main>
+
+<script>
+// =============================================================================
+// Configuration
+// =============================================================================
+const CONFIG = {
+  cloudantUrl: "https://b27030c0-5465-4cb1-965c-41374f65525a-bluemix.cloudantnosqldb.appdomain.cloud",
+  iamToken:    window.__CLOUDANT_TOKEN__ || "",
+  adminPin:    window.__ADMIN_PIN__      || "1234",
+  apiKey:      (window.__K_HEAD__ && window.__K_REST__)
+                 ? (window.__K_HEAD__ + "-" + window.__K_REST__)
+                 : (window.__CLOUDANT_APIKEY__ || ""),
+};
+
+// =============================================================================
+// In-browser IAM token refresh
+// Silently fetches a fresh token every 50 minutes using the API key injected
+// at build time. Updates CONFIG.iamToken in place — all Cloudant calls pick
+// it up automatically. Runs only when the tab is visible.
+// =============================================================================
+async function refreshIamToken() {
+  const apiKey = CONFIG.apiKey || "";
+  if (!apiKey) return;
+  try {
+    const res = await fetch("https://iam.cloud.ibm.com/identity/token", {
+      method:  "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body:    "grant_type=urn%3Aibm%3Aparams%3Aoauth%3Agrant-type%3Aapikey&apikey=" + encodeURIComponent(apiKey),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.access_token) CONFIG.iamToken = data.access_token;
+    }
+  } catch (_) { /* silently ignore — existing token remains active */ }
+}
+
+// Refresh immediately on load — handles stale baked-in token after w3 re-login.
+// refreshData() also calls refreshIamToken() before every Cloudant fetch (every 5 min),
+// so no separate interval timer is needed.
+refreshIamToken();
+
+// =============================================================================
+// Cloudant
+// =============================================================================
+const Cloudant = {
+  headers() {
+    return {
+      "Authorization": `Bearer ${CONFIG.iamToken}`,
+      "Content-Type":  "application/json",
+    };
+  },
+  async fetchAll(db) {
+    const res = await fetch(
+      `${CONFIG.cloudantUrl}/${db}/_all_docs?include_docs=true`,
+      { headers: this.headers() }
+    );
+    if (!res.ok) throw new Error(`Cloudant ${db}: HTTP ${res.status}`);
+    return (await res.json()).rows.map(r => r.doc);
+  },
+};
+
+// =============================================================================
+// Helpers
+// =============================================================================
+const STATUS_LABEL = {
+  "not-started": "Not Started",
+  "in-progress":  "In Progress",
+  "on-track":     "On Track",
+  "at-risk":      "At Risk",
+  "blocked":      "Blocked",
+  "completed":    "Completed",
+};
+
+const STATUS_COLORS = {
+  "not-started": "#9ca3af",
+  "in-progress":  "#3b82f6",
+  "on-track":     "#22c55e",
+  "at-risk":      "#f59e0b",
+  "blocked":      "#ef4444",
+  "completed":    "#16a34a",
+};
+
+function statusChip(s) {
+  const cls   = "status--" + (s || "not-started");
+  const label = STATUS_LABEL[s] || "Not Started";
+  return `<span class="status-chip ${cls}">${label}</span>`;
+}
+
+function initials(name) {
+  return name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
+}
+
+function formatName(name) {
+  // Returns "Firstname L." — first name + first initial of last name
+  if (!name) return "";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return parts[0] + " " + parts[parts.length - 1][0].toUpperCase() + ".";
+}
+
+function truncate(str, max) {
+  if (!str) return "";
+  return str.length > max ? str.slice(0, max - 1) + "\u2026" : str;
+}
+
+function val(v, fallback = "") {
+  return v && v.trim && v.trim() ? v : fallback;
+}
+
+// =============================================================================
+// State
+// =============================================================================
+let _pods = [], _participants = [], _goals = [];
+
+// =============================================================================
+// Summary bar
+// =============================================================================
+function renderSummary() {
+  const goalMap  = Object.fromEntries(_goals.map(g => [g.participantId, g]));
+  const statuses = _participants.map(p => (goalMap[p._id] || {}).status || "not-started");
+
+  const stats = [
+    { value: _participants.length,                         label: "Participants" },
+    { value: statuses.filter(s => s !== "not-started").length, label: "Goals Set" },
+    { value: statuses.filter(s => s === "on-track").length,    label: "On Track" },
+    { value: statuses.filter(s => s === "completed").length,   label: "Completed" },
+    { value: statuses.filter(s => s === "blocked" || s === "at-risk").length, label: "Need Support" },
+  ];
+
+  document.getElementById("summary-bar").innerHTML = stats.map(s => `
+    <div class="stat-card">
+      <div class="stat-card__value">${s.value}</div>
+      <div class="stat-card__label">${s.label}</div>
+    </div>`).join("");
+}
+
+// =============================================================================
+// Donut chart (pure SVG)
+// =============================================================================
+function renderDonut() {
+  const goalMap  = Object.fromEntries(_goals.map(g => [g.participantId, g]));
+  const counts   = {};
+  Object.keys(STATUS_LABEL).forEach(k => { counts[k] = 0; });
+  _participants.forEach(p => {
+    const s = (goalMap[p._id] || {}).status || "not-started";
+    counts[s] = (counts[s] || 0) + 1;
+  });
+
+  const total  = _participants.length || 1;
+  const cx = 60, cy = 60, r = 46, stroke = 18;
+  const circumference = 2 * Math.PI * r;
+  let offset = 0;
+
+  const svg    = document.getElementById("donut-svg");
+  const legend = document.getElementById("donut-legend");
+
+  // Background circle
+  svg.innerHTML = `<circle cx="${cx}" cy="${cy}" r="${r}"
+    fill="none" stroke="#e0daea" stroke-width="${stroke}" />`;
+
+  const legendItems = [];
+
+  Object.entries(counts).forEach(([status, count]) => {
+    if (!count) return;
+    const pct  = count / total;
+    const dash = pct * circumference;
+    const gap  = circumference - dash;
+    const color = STATUS_COLORS[status];
+
+    svg.innerHTML += `
+      <circle cx="${cx}" cy="${cy}" r="${r}"
+        fill="none"
+        stroke="${color}"
+        stroke-width="${stroke}"
+        stroke-dasharray="${dash} ${gap}"
+        stroke-dashoffset="${-offset}"
+        transform="rotate(-90 ${cx} ${cy})"
+        style="transition:stroke-dasharray 0.5s ease" />`;
+
+    offset += dash;
+
+    legendItems.push(`
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${color}"></div>
+        <span>${STATUS_LABEL[status]}</span>
+        <span class="legend-item__count">${count}</span>
+      </div>`);
+  });
+
+  legend.innerHTML = legendItems.join("");
+}
+
+// =============================================================================
+// Engagement score — 40 pts Session 1 · 40 pts Session 2 · 20 pts Session 3
+//
+// Status weighting: completed/on-track = full/partial credit
+//                   at-risk/blocked    = 0 (you showed up but you're behind)
+//                   not-started        = minimal credit for selecting anything
+//
+// Uses session2Status (the S2 summary dropdown — genuinely blank until S2 is saved)
+// NOT goal.status  (auto-set to "not-started" on every document creation)
+// =============================================================================
+
+// Points awarded based on which status value was actually selected
+const S2_STATUS_PTS = {
+  "completed":   10,
+  "on-track":     7,
+  "in-progress":  5,
+  "not-started":  2,
+  "at-risk":      0,
+  "blocked":      0,
+};
+const S3_STATUS_PTS = {
+  "completed":   10,
+  "on-track":     6,
+  "in-progress":  4,
+  "not-started":  1,
+  "at-risk":      0,
+  "blocked":      0,
+};
+
+function engagementScore(goal) {
+  if (!goal) return 0;
+
+  // --- Session 1 (max 40) ---
+  let s1 = 0;
+  if (goal.goalTitle      && goal.goalTitle.trim())      s1 += 10;
+  if (goal.smartStatement && goal.smartStatement.trim()) s1 += 10;
+  if (goal.goalCategory   && goal.goalCategory.trim())   s1 +=  5;
+  if (goal.whyItMatters   && goal.whyItMatters.trim())   s1 +=  5;
+  if (goal.firstAction    && goal.firstAction.trim())    s1 +=  5;
+  if (goal.session1GoalSubmitted)                        s1 +=  3;
+  if (goal.session1FirstActionCompleted)                 s1 +=  2;
+  // 40 pts max: fully completing S1 = exactly 40
+
+  // --- Session 2 (max 40) ---
+  // percentComplete drives most of the weight — reflects actual goal progress
+  // Status weighted by value so at-risk/blocked don't inflate the score
+  let s2 = 0;
+  const pct = goal.percentComplete || 0;
+  s2 += Math.round((pct / 100) * 25);                                            // 0–25 pts based on slider
+  s2 += (S2_STATUS_PTS[goal.session2Status] ?? 0);                               // 0–10 pts weighted by status
+  if (goal.session2CourseCorrection && goal.session2CourseCorrection.trim()) s2 += 5; // filled in a reflection
+
+  // --- Session 3 (max 20) ---
+  let s3 = 0;
+  s3 += (S3_STATUS_PTS[goal.session3FinalStatus] ?? 0);                          // 0–10 pts weighted by final status
+  if (goal.session3Result        && goal.session3Result.trim())         s3 +=  5;
+  if (goal.session3LessonLearned && goal.session3LessonLearned.trim())  s3 +=  5;
+
+  return Math.min(s1, 40) + Math.min(s2, 40) + Math.min(s3, 20);
+}
+
+// =============================================================================
+// Pod progress bar chart
+// =============================================================================
+function renderPodBars() {
+  const goalMap = Object.fromEntries(_goals.map(g => [g.participantId, g]));
+
+  const podData = _pods.map(pod => {
+    const members = _participants.filter(p => p.podId === pod._id);
+    const avg = members.length
+      ? Math.round(members.reduce((sum, p) => sum + engagementScore(goalMap[p._id]), 0) / members.length)
+      : 0;
+    return { name: pod.name, avg };
+  }).sort((a, b) => b.avg - a.avg);
+
+  document.getElementById("pod-bars").innerHTML = podData.map(d => `
+    <div class="pod-bar-row">
+      <div class="pod-bar-label">${d.name}</div>
+      <div class="pod-bar-track">
+        <div class="pod-bar-fill" style="width:${d.avg}%">
+          ${d.avg >= 10 ? `<span class="pod-bar-pct">${d.avg}%</span>` : ""}
+        </div>
+      </div>
+      ${d.avg < 10 ? `<span class="pod-bar-pct-outside">${d.avg}%</span>` : ""}
+    </div>`).join("");
+}
+
+// =============================================================================
+// Top members ("Leading the Way")
+// =============================================================================
+function renderTopMembers() {
+  const goalMap = Object.fromEntries(_goals.map(g => [g.participantId, g]));
+  const podMap  = Object.fromEntries(_pods.map(p => [p._id, p]));
+
+  const scored = _participants
+    .map(p => ({
+      p,
+      score: engagementScore(goalMap[p._id]),
+      podName: (podMap[p.podId] || {}).name || "",
+    }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+
+  if (!scored.length) {
+    document.getElementById("top-members").innerHTML = "";
+    return;
+  }
+
+  const rows = scored.map((x, i) => `
+    <div class="top-member-row">
+      <div class="top-member-rank">${i + 1}</div>
+      <div class="top-member-avatar">${initials(x.p.name)}</div>
+      <div class="top-member-info">
+        <div class="top-member-name">${formatName(x.p.name)}</div>
+        <div class="top-member-pod">${x.podName}</div>
+      </div>
+      <div class="top-member-bar-wrap">
+        <div class="top-member-bar-track">
+          <div class="top-member-bar-fill" style="width:${x.score}%"></div>
+        </div>
+        <div class="top-member-score">${x.score}%</div>
+      </div>
+    </div>`).join("");
+
+  document.getElementById("top-members").innerHTML = `
+    <div class="top-members__heading">Leading the Way ✦</div>
+    <div class="top-members__list">${rows}</div>`;
+}
+
+// =============================================================================
+// Pod selector
+// =============================================================================
+function populatePodSelector() {
+  const sel = document.getElementById("pod-select");
+  _pods.forEach(pod => {
+    const opt = document.createElement("option");
+    opt.value       = pod._id;
+    opt.textContent = pod.name;
+    sel.appendChild(opt);
+  });
+
+  sel.addEventListener("change", () => {
+    const podId = sel.value;
+    if (!podId) {
+      document.getElementById("pod-panel-container").innerHTML = "";
+      return;
+    }
+    renderPodPanel(podId);
+  });
+}
+
+// =============================================================================
+// Pod detail panel
+// =============================================================================
+function renderPodPanel(podId) {
+  const pod      = _pods.find(p => p._id === podId);
+  const members  = _participants.filter(p => p.podId === podId);
+  const goalMap  = Object.fromEntries(_goals.map(g => [g.participantId, g]));
+
+  const avg = members.length
+    ? Math.round(members.reduce((sum, p) => sum + engagementScore(goalMap[p._id]), 0) / members.length)
+    : 0;
+
+  const memberRows = members.map(p => {
+    const goal   = goalMap[p._id] || {};
+    const status = goal.status || "not-started";
+    const pct    = engagementScore(goal);
+
+    return `
+      <div class="member-row" data-pid="${p._id}">
+        <div class="member-row__summary">
+          <div class="member-avatar">${initials(p.name)}</div>
+          <div class="member-info">
+            <div class="member-info__name">${formatName(p.name)}</div>
+            <div class="member-info__sub">${p.podRole || ""}</div>
+          </div>
+          <div class="member-row__right">
+            ${statusChip(status)}
+            <span class="progress-pill">${pct}%</span>
+            <svg class="expand-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="member-drawer">
+          <div class="drawer-grid">
+            <div>
+              <div class="drawer-field__label">Goal</div>
+              <div class="drawer-field__value ${!goal.goalTitle ? 'empty' : ''}">
+                ${val(goal.goalTitle, "Not yet set")}
+              </div>
+            </div>
+            <div>
+              <div class="drawer-field__label">Category</div>
+              <div class="drawer-field__value ${!goal.goalCategory ? 'empty' : ''}">
+                ${val(goal.goalCategory, "Not set")}
+              </div>
+            </div>
+            <div>
+              <div class="drawer-field__label">Next Action</div>
+              <div class="drawer-field__value ${!goal.nextAction ? 'empty' : ''}">
+                ${val(truncate(goal.nextAction, 80), "Not yet set")}
+              </div>
+            </div>
+            <div>
+              <div class="drawer-field__label">Support Needed</div>
+              <div class="drawer-field__value ${!goal.supportNeeded ? 'empty' : ''}">
+                ${val(truncate(goal.supportNeeded, 80), "None noted")}
+              </div>
+            </div>
+            ${goal.blocker || goal.session2Blocker ? `
+            <div>
+              <div class="drawer-field__label">Blocker</div>
+              <div class="drawer-field__value" style="color:#b91c1c">
+                ${truncate(goal.blocker || goal.session2Blocker, 80)}
+              </div>
+            </div>` : ""}
+          </div>
+          <div class="drawer-actions">
+            <a href="progress.html?id=${encodeURIComponent(p._id)}"
+               class="btn btn--primary btn--sm">View Full Progress</a>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  document.getElementById("pod-panel-container").innerHTML = `
+    <div class="pod-panel">
+      <div class="pod-panel__header">
+        <div>
+          <div class="pod-panel__name">${pod.name}</div>
+          <div class="pod-panel__meta">
+            ${members.length} member${members.length !== 1 ? "s" : ""}
+            &nbsp;&middot;&nbsp; ${avg}% average progress
+          </div>
+          <div class="pod-panel__progress-bar">
+            <div class="pod-panel__progress-fill" style="width:${avg}%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="member-list">${memberRows}</div>
+    </div>`;
+
+  // Expand / collapse member rows
+  document.querySelectorAll(".member-row").forEach(row => {
+    row.addEventListener("click", e => {
+      // Don't collapse when clicking the "View Full Progress" link
+      if (e.target.closest("a")) return;
+      row.classList.toggle("expanded");
+    });
+  });
+}
+
+// =============================================================================
+// Admin PIN gate
+// =============================================================================
+document.getElementById("btn-admin").addEventListener("click", () => {
+  const pin = prompt("Enter admin PIN:");
+  if (pin === null) return;
+  if (pin === CONFIG.adminPin) {
+    window.location.href = "admin.html";
+  } else {
+    alert("Incorrect PIN. Please try again.");
+  }
+});
+
+// =============================================================================
+// Bootstrap
+// =============================================================================
+async function init() {
+  const loading    = document.getElementById("loading-state");
+  const content    = document.getElementById("dashboard-content");
+  const errorState = document.getElementById("error-state");
+  const errorMsg   = document.getElementById("error-message");
+
+  if (!CONFIG.iamToken) {
+    loading.style.display    = "none";
+    errorState.style.display = "flex";
+    errorMsg.textContent =
+      "No Cloudant authentication token is configured. " +
+      "Set window.__CLOUDANT_TOKEN__ in the build step or deployment config.";
+    return;
+  }
+
+  try {
+    const [pods, participants, goals] = await Promise.all([
+      Cloudant.fetchAll("pods"),
+      Cloudant.fetchAll("participants"),
+      Cloudant.fetchAll("goals"),
+    ]);
+
+    _pods         = pods.filter(d => d.type === "pod").sort((a, b) => a.podId.localeCompare(b.podId));
+    _participants = participants.filter(d => d.type === "participant").sort((a, b) => a.name.localeCompare(b.name));
+    _goals        = goals.filter(d => d.type === "goal");
+
+    loading.style.display = "none";
+    content.style.display = "block";
+
+    renderSummary();
+    renderDonut();
+    renderPodBars();
+    renderTopMembers();
+    populatePodSelector();
+
+  } catch (err) {
+    loading.style.display    = "none";
+    errorState.style.display = "flex";
+    errorMsg.textContent = err.message || "An unexpected error occurred while loading data.";
+  }
+}
+
+// =============================================================================
+// Page nav tab switching
+// =============================================================================
+function showPage(target) {
+  const isOverview = target === "overview";
+  document.getElementById("page-overview").style.display     = isOverview ? "block" : "none";
+  document.getElementById("page-pods-section").style.display = isOverview ? "block" : "none";
+  document.getElementById("page-guide").style.display        = target === "guide"    ? "block" : "none";
+  document.querySelectorAll(".page-nav__btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.page === target);
+  });
+}
+
+document.getElementById("page-nav").addEventListener("click", e => {
+  const btn = e.target.closest(".page-nav__btn");
+  if (!btn) return;
+  showPage(btn.dataset.page);
+});
+
+// Initialise to overview on load
+showPage("overview");
+
+// Await the immediate token refresh before loading data so Cloudant
+// never receives a stale token on first page load after w3 re-login.
+refreshIamToken().then(init);
+
+// =============================================================================
+// Auto-refresh — silently re-fetch Cloudant data every 5 minutes so the
+// dashboard stays current when participants submit updates between sessions.
+// Only refreshes while the tab is visible to avoid unnecessary network calls.
+// =============================================================================
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+async function refreshData() {
+  if (document.visibilityState !== "visible") return;
+  // Always refresh the IAM token first — ensures Cloudant calls never use
+  // an expired token regardless of how long the page has been open.
+  await refreshIamToken();
+  try {
+    const [pods, participants, goals] = await Promise.all([
+      Cloudant.fetchAll("pods"),
+      Cloudant.fetchAll("participants"),
+      Cloudant.fetchAll("goals"),
+    ]);
+    _pods         = pods.filter(d => d.type === "pod").sort((a, b) => a.podId.localeCompare(b.podId));
+    _participants = participants.filter(d => d.type === "participant").sort((a, b) => a.name.localeCompare(b.name));
+    _goals        = goals.filter(d => d.type === "goal");
+    renderSummary();
+    renderDonut();
+    renderPodBars();
+    renderTopMembers();
+    populatePodSelector();
+  } catch (_) {
+    // Silently ignore refresh errors — stale data is better than a visible error
+  }
+}
+
+setInterval(refreshData, REFRESH_INTERVAL_MS);
+
+// Also refresh when the tab regains focus after being hidden
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") refreshData();
+});
+</script>
+</body>
+</html>
