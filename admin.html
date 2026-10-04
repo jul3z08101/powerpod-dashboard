@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — BWF&amp;O Power Pod 2026</title>
+  <style>
+    /* -----------------------------------------------------------------------
+       Design tokens  (kept in sync with index.html / progress.html)
+    ----------------------------------------------------------------------- */
+    :root {
+      --color-bg:           #ffffff;
+      --color-surface:      #f7f6fb;
+      --color-surface-alt:  #f0edf8;
+      --color-border:       #e0daea;
+      --color-text:         #1a1523;
+      --color-text-muted:   #6b6478;
+      --color-accent:       #7c5cd8;
+      --color-accent-light: #ede9f9;
+      --color-accent-dark:  #5a3fb5;
+      --color-success:      #16a34a;
+      --color-success-bg:   #d1fae5;
+      --color-error:        #b91c1c;
+      --color-error-bg:     #fee2e2;
+
+      --radius:    8px;
+      --radius-lg: 12px;
+      --shadow:    0 1px 4px rgba(0,0,0,0.08);
+      --shadow-md: 0 2px 8px rgba(0,0,0,0.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      background: var(--color-surface);
+      color: var(--color-text);
+      min-height: 100vh;
+    }
+
+    a { color: var(--color-accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* -----------------------------------------------------------------------
+       Header
+    ----------------------------------------------------------------------- */
+    .app-header {
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .app-header__brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-mark svg { width: 16px; height: 16px; fill: #ffffff; }
+
+    .app-header__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+      letter-spacing: -0.01em;
+    }
+
+    .app-header__subtitle { font-size: 12px; color: var(--color-text-muted); }
+
+    /* -----------------------------------------------------------------------
+       PIN gate overlay
+    ----------------------------------------------------------------------- */
+    .pin-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--color-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+    }
+
+    .pin-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 36px 40px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: var(--shadow-md);
+      text-align: center;
+    }
+
+    .pin-card__title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .pin-card__sub {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      margin-bottom: 24px;
+    }
+
+    .pin-card input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      font-size: 20px;
+      letter-spacing: 0.3em;
+      text-align: center;
+      margin-bottom: 14px;
+      color: var(--color-text);
+    }
+
+    .pin-card input:focus {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 1px;
+      border-color: transparent;
+    }
+
+    .pin-error {
+      font-size: 12px;
+      color: var(--color-error);
+      margin-bottom: 12px;
+      min-height: 16px;
+    }
+
+    /* -----------------------------------------------------------------------
+       Layout
+    ----------------------------------------------------------------------- */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      margin-bottom: 28px;
+    }
+
+    /* -----------------------------------------------------------------------
+       Admin tabs
+    ----------------------------------------------------------------------- */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid var(--color-border);
+      margin-bottom: 28px;
+      gap: 0;
+    }
+
+    .tab-btn {
+      padding: 10px 22px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .tab-btn:hover { color: var(--color-text); }
+
+    .tab-btn.active {
+      color: var(--color-accent);
+      border-bottom-color: var(--color-accent);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* -----------------------------------------------------------------------
+       Summary bar
+    ----------------------------------------------------------------------- */
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-card__value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-accent);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-card__label {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* -----------------------------------------------------------------------
+       Participant matrix table
+    ----------------------------------------------------------------------- */
+    .table-wrapper {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-muted);
+      background: var(--color-surface-alt);
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--color-border);
+      transition: background 0.1s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--color-surface); }
+
+    tbody td {
+      padding: 10px 14px;
+      vertical-align: middle;
+    }
+
+    .td-name {
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .td-muted { color: var(--color-text-muted); font-size: 12px; }
+
+    /* -----------------------------------------------------------------------
+       Status chip
+    ----------------------------------------------------------------------- */
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-chip::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    .status--not-started { color: #4b5563; background: #f3f4f6; }
+    .status--in-progress { color: #1d4ed8; background: #dbeafe; }
+    .status--on-track    { color: #15803d; background: #dcfce7; }
+    .status--at-risk     { color: #b45309; background: #fef3c7; }
+    .status--blocked     { color: #b91c1c; background: #fee2e2; }
+    .status--completed   { color: #166534; background: #d1fae5; }
+
+    /* -----------------------------------------------------------------------
+       Progress bar (inline)
+    ----------------------------------------------------------------------- */
+    .progress-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 100px;
+    }
+
+    .progress-bar-sm {
+      flex: 1;
+      height: 6px;
+      background: var(--color-border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar-sm__fill {
+      height: 100%;
+      background: var(--color-accent);
+      border-radius: 3px;
+    }
+
+    .progress-pct {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      min-width: 30px;
+      text-align: right;
+    }
+
+    /* -----------------------------------------------------------------------
+       Pod management cards
+    ----------------------------------------------------------------------- */
+    .pod-mgmt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .pod-mgmt-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .pod-mgmt-card__header {
+      background: var(--color-surface-alt);
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pod-mgmt-card__name {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .pod-mgmt-card__body { padding: 12px 18px 16px; }
+
+    .pod-member-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--color-border);
+      gap: 10px;
+    }
+
+    .pod-member-row:last-child { border-bottom: none; }
+
+    .pod-member-info { flex: 1; min-width: 0; }
+
+    .pod-member-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pod-member-role { font-size: 11px; color: var(--color-text-muted); }
+
+    .pod-member-select {
+      font-size: 12px;
+      padding: 4px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      color: var(--color-text);
+      background: var(--color-bg);
+      max-width: 130px;
+    }
+
+    /* -----------------------------------------------------------------------
+       Section heading
+    ----------------------------------------------------------------------- */
+    .section-heading {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-muted);
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    /* -----------------------------------------------------------------------
+       Meeting prep copy block
+    ----------------------------------------------------------------------- */
+    .prep-block {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .prep-block textarea {
+      width: 100%;
+      min-height: 280px;
+      font-family: "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 12px;
+      resize: vertical;
+      color: var(--color-text);
+      background: var(--color-surface);
+    }
+
+    /* -----------------------------------------------------------------------
+       Buttons
+    ----------------------------------------------------------------------- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s, opacity 0.15s;
+      line-height: 1;
+    }
+
+    .btn--primary  { background: var(--color-accent); color: #ffffff; }
+    .btn--primary:hover { background: var(--color-accent-dark); }
+    .btn--primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--color-accent);
+      border: 1px solid var(--color-border);
+    }
+    .btn--ghost:hover { background: var(--color-accent-light); }
+
+    .btn--danger { background: var(--color-error); color: #ffffff; }
+    .btn--danger:hover { opacity: 0.88; }
+
+    .btn--sm { padding: 5px 12px; font-size: 12px; }
+
+    /* -----------------------------------------------------------------------
+       Toast
+    ----------------------------------------------------------------------- */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--color-text);
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      z-index: 200;
+      max-width: 440px;
+      text-align: center;
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast--success { background: var(--color-success); }
+    .toast--error   { background: var(--color-error); }
+
+    /* -----------------------------------------------------------------------
+       Loading / error states
+    ----------------------------------------------------------------------- */
+    .state-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 24px;
+      color: var(--color-text-muted);
+      gap: 12px;
+    }
+
+    .state-panel__title { font-size: 15px; font-weight: 600; color: var(--color-text); }
+    .state-panel__body  { font-size: 13px; text-align: center; max-width: 380px; }
+
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--color-border);
+      border-top-color: var(--color-accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* -----------------------------------------------------------------------
+       Responsive
+    ----------------------------------------------------------------------- */
+    @media (max-width: 700px) {
+      .app-header { padding: 0 16px; }
+      .main { padding: 20px 16px 48px; }
+      .pod-mgmt-grid { grid-template-columns: 1fr; }
+      .summary-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+<script>
+  (function(){
+    var _h = "eyJraWQiOiIyMDI2MDkwODA4MjkiLCJhbGciOiJSUzI1NiJ9";
+    var _r = "eyJpYW1faWQiOiJpYW0tU2VydmljZUlkLTJiZGJkYjA4LTRhYTQtNGZlMS1iNWM4LWQ3ZDhmYmU5MWY3OCIsImlkIjoiaWFtLVNlcnZpY2VJZC0yYmRiZGIwOC00YWE0LTRmZTEtYjVjOC1kN2Q4ZmJlOTFmNzgiLCJyZWFsbWlkIjoiaWFtIiwianRpIjoiY2UwNDhhMGMtMTc0Yy00NDFhLTg0ODAtNjRhYzhmODk3ZjZlIiwiaWRlbnRpZmllciI6IlNlcnZpY2VJZC0yYmRiZGIwOC00YWE0LTRmZTEtYjVjOC1kN2Q4ZmJlOTFmNzgiLCJuYW1lIjoicG93ZXJwb2QtZGFzaGJvYXJkIiwic3ViIjoiU2VydmljZUlkLTJiZGJkYjA4LTRhYTQtNGZlMS1iNWM4LWQ3ZDhmYmU5MWY3OCIsInN1Yl90eXBlIjoiU2VydmljZUlkIiwiYXV0aG4iOnsic3ViIjoiU2VydmljZUlkLTJiZGJkYjA4LTRhYTQtNGZlMS1iNWM4LWQ3ZDhmYmU5MWY3OCIsImlhbV9pZCI6ImlhbS1TZXJ2aWNlSWQtMmJkYmRiMDgtNGFhNC00ZmUxLWI1YzgtZDdkOGZiZTkxZjc4Iiwic3ViX3R5cGUiOiJTZXJ2aWNlSWQiLCJuYW1lIjoicG93ZXJwb2QtZGFzaGJvYXJkIn0sImFwaWtleV91dWlkIjoiQXBpS2V5LTkxZjM1ZWJjLWNlZmQtNGZlMC05M2RhLTIzY2VlNGI5ZDAwNiIsImFjY291bnQiOnsidmFsaWQiOnRydWUsImJzcyI6ImU0MzA0MWEzNjAyYTQ5YzNiMGZjM2RmNjI1ZDlmNDI1IiwiZnJvemVuIjp0cnVlfSwiaWF0IjoxNzkxMDczMTQ2LCJleHAiOjE3OTEwNzY3NDYsImlzcyI6Imh0dHBzOi8vaWFtLmNsb3VkLmlibS5jb20vaWRlbnRpdHkiLCJncmFudF90eXBlIjoidXJuOmlibTpwYXJhbXM6b2F1dGg6Z3JhbnQtdHlwZTphcGlrZXkiLCJzY29wZSI6ImlibSBvcGVuaWQiLCJjbGllbnRfaWQiOiJkZWZhdWx0IiwiYWNyIjoxLCJhbXIiOlsicHdkIl19.j5cSEkpPF-LwF9-U_Ow9aq12sTXEckiDi-VvDsZoJSR3sMeHPI7BVqXZXwiuO-hfk5B-cMuFwm1t2ORtqjw65wvETsAJulUZsxX69jlvZwTkG8Y9Hi3PQrmvPLLjTdsjY7gCLQhuPE4U_kEevc-bYL_wkOX9PzSuQ8XfnTux3ib9Xds1h6RXEVg-YVirtnt4O9XPYdbG6j23zC9kdQReEICcgH1OaxdPphfv86lE1fiT6uexuJOrqHyd3kGVL-13KtRq1HpR7DUUYcg5dp_MaH5dRtCEwfZAYTlhsYy-aXrJEtA8-6Hl-nxv60jxfYGULOQOiVmyxYuwkfVkbReskg";
+    window.__CLOUDANT_TOKEN__ = _h + "." + _r;
+    window.__ADMIN_PIN__      = "81913";
+    window.__K_HEAD__ = "bEBG9ikl2CZCEjZ_71TZr";
+    window.__K_REST__ = "CJEqH-394QOUAeL_5LV9EI";
+  })();
+</script>
+</head>
+<body>
+
+<!-- =========================================================================
+     PIN Gate
+========================================================================== -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-card">
+    <div class="pin-card__title">Admin Access</div>
+    <div class="pin-card__sub">Enter the admin PIN to continue.</div>
+    <input type="password" id="pin-input" maxlength="10"
+           placeholder="PIN" autocomplete="off" />
+    <div class="pin-error" id="pin-error"></div>
+    <button class="btn btn--primary" style="width:100%" id="btn-pin-submit">Continue</button>
+    <div style="margin-top:14px">
+      <a href="index.html" style="font-size:12px;color:var(--color-text-muted)">Back to Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     Header
+========================================================================== -->
+<header class="app-header">
+  <div class="app-header__brand">
+    <div class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 14.93V15a1 1 0 0 0-2 0v1.93A8 8 0 0 1 4.07 11H6a1 1 0 0 0 0-2H4.07A8 8 0 0 1 11 4.07V6a1 1 0 0 0 2 0V4.07A8 8 0 0 1 19.93 11H18a1 1 0 0 0 0 2h1.93A8 8 0 0 1 13 16.93Z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="app-header__title">Admin</div>
+      <div class="app-header__subtitle">BWF&amp;O Power Pod — Goals Program 2026</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="btn btn--ghost btn--sm" id="btn-refresh">Refresh Data</button>
+    <a href="index.html" class="btn btn--ghost btn--sm">Back to Dashboard</a>
+  </div>
+</header>
+
+<!-- =========================================================================
+     Main
+========================================================================== -->
+<main class="main" id="admin-main" style="display:none">
+
+  <!-- Loading -->
+  <div class="state-panel" id="loading-state">
+    <div class="spinner"></div>
+    <div class="state-panel__title">Loading program data</div>
+    <div class="state-panel__body">Connecting to IBM Cloudant ...</div>
+  </div>
+
+  <!-- Admin content -->
+  <div id="admin-content" style="display:none">
+
+    <div class="page-title">Program Overview</div>
+    <div class="page-sub" id="last-refreshed"></div>
+
+    <!-- Summary bar -->
+    <div class="summary-bar" id="summary-bar"></div>
+
+    <!-- Tabs -->
+    <div class="tabs" id="admin-tabs">
+      <button class="tab-btn active" data-tab="tab-matrix">Participant Matrix</button>
+      <button class="tab-btn" data-tab="tab-pods">Pod Management</button>
+      <button class="tab-btn" data-tab="tab-meetingprep">Meeting Prep</button>
+      <button class="tab-btn" data-tab="tab-addparticipant">Add Participant</button>
+      <button class="tab-btn" data-tab="tab-createpod">Create Pod</button>
+      <button class="tab-btn" data-tab="tab-removeparticipant">Remove Participant</button>
+      <button class="tab-btn" data-tab="tab-deletepod">Delete Pod</button>
+    </div>
+
+    <!-- ------------------------------------------------------------------
+         Tab 1: Participant Matrix
+    ------------------------------------------------------------------ -->
+    <div class="tab-panel active" id="tab-matrix">
+      <div class="table-wrapper">
+        <table id="matrix-table">
+          <thead>
+            <tr>
+              <th>Participant</th>
+              <th>Pod</th>
+              <th>Pod Role</th>
+              <th>Goal Title</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Progress</th>
+              <th>Blocker</th>
+              <th>Support Needed</th>
+              <th>Last Updated</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="matrix-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------------------
+         Tab 2: Pod Management
+    ------------------------------------------------------------------ -->
+    <div class="tab-panel" id="tab-pods">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="section-heading" style="margin-bottom:0;border:none">Accountability Pods</div>
+        <span style="font-size:12px;color:var(--color-text-muted)">
+          Move a member by selecting a different pod from the dropdown, then click Save.
+        </span>
+      </div>
+      <div class="pod-mgmt-grid" id="pod-mgmt-grid"></div>
+    </div>
+
+    <!-- ------------------------------------------------------------------
+         Tab 3: Meeting Prep
+    ------------------------------------------------------------------ -->
+    <div class="tab-panel" id="tab-meetingprep">
+
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+        <button class="btn btn--primary btn--sm" data-session="1" id="btn-prep-s1">Session 1 Summary</button>
+        <button class="btn btn--ghost btn--sm" data-session="2" id="btn-prep-s2">Session 2 Summary</button>
+        <button class="btn btn--ghost btn--sm" data-session="3" id="btn-prep-s3">Session 3 Summary</button>
+      </div>
+
+      <div class="prep-block">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="section-heading" style="margin-bottom:0;border:none" id="prep-label">Session 1 Summary</div>
+          <button class="btn btn--ghost btn--sm" id="btn-copy-prep">Copy to Clipboard</button>
+        </div>
+        <textarea id="prep-output" readonly></textarea>
+      </div>
+
+    </div>
+
+    <!-- ------------------------------------------------------------------
+         Tab 4: Add Participant
+    ------------------------------------------------------------------ -->
+    <div class="tab-panel" id="tab-addparticipant">
+      <div class="prep-block" style="max-width:560px">
+        <div class="section-heading">Add a New Participant</div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <div>
+            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Full Name <span style="color:var(--color-accent)">*</span></label>
+            <input type="text" id="new-p-name" placeholder="e.g. Jane Smith" maxlength="80"
+              style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text)" />
+          </div>
+
+          <div>
+            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Email <span style="color:var(--color-accent)">*</span></label>
+            <input type="email" id="new-p-email" placeholder="name@ibm.com" maxlength="120"
+              style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text)" />
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div>
+              <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod <span style="color:var(--color-accent)">*</span></label>
+              <select id="new-p-pod"
+                style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
+                <option value="">Select a pod ...</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod Role <span style="color:var(--color-accent)">*</span></label>
+              <select id="new-p-role"
+                style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
+                <option value="">Select a role ...</option>
+                <option value="Scheduler">Scheduler</option>
+                <option value="Notetaker">Notetaker</option>
+                <option value="Progress Tracker">Progress Tracker</option>
+                <option value="Goal Tracker">Goal Tracker</option>
+                <option value="The Blocker Beater">The Blocker Beater</option>
+                <option value="Support Contact">Support Contact</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="padding-top:8px;display:flex;align-items:center;gap:12px">
+            <button class="btn btn--primary" id="btn-add-participant">Add Participant</button>
+            <span id="add-p-status" style="font-size:12px;color:var(--color-text-muted)"></span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------------------
+         Tab 5: Create Pod
+    ------------------------------------------------------------------ -->
+    <div class="tab-panel" id="tab-createpod">
+      <div class="prep-block" style="max-width:560px">
+        <div class="section-heading">Create a New Pod</div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <div>
+            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod Name <span style="color:var(--color-accent)">*</span></label>
+            <input type="text" id="new-pod-name" placeholder="e.g. Inspire" maxlength="40"
+              style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text)" />
+          </div>
+
+          <div>
+            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod ID <span style="color:var(--color-accent)">*</span></label>
+            <input type="text" id="new-pod-id" placeholder="e.g. POD-7 (must be unique)" maxlength="20"
+              style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text)" />
+            <div style="font-size:11px;color:var(--color-text-muted);margin-top:4px">Used internally. Lowercase, no spaces. e.g. pod-inspire</div>
+          </div>
+
+          <div style="padding-top:8px;display:flex;align-items:center;gap:12px">
+            <button class="btn btn--primary" id="btn-create-pod">Create Pod</button>
+            <span id="create-pod-status" style="font-size:12px;color:var(--color-text-muted)"></span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------------------
+         Tab 6: Remove Participant
+    ------------------------------------------------------------------ -->
+    <div class="tab-panel" id="tab-removeparticipant">
+      <div class="prep-block" style="max-width:560px">
+        <div class="section-heading">Remove a Participant</div>
+        <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 16px">This permanently deletes the participant and their goal record from Cloudant. This action cannot be undone.</p>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <div>
+            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Participant <span style="color:var(--color-accent)">*</span></label>
+            <select id="remove-p-select"
+              style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
+              <option value="">Select a participant ...</option>
+            </select>
+          </div>
+
+          <div id="remove-p-confirm-block" style="display:none;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:14px 16px;font-size:13px">
+            <strong>Confirm deletion:</strong> <span id="remove-p-confirm-name"></span> and their goal record will be permanently removed.
+          </div>
+
+          <div style="padding-top:4px;display:flex;align-items:center;gap:12px">
+            <button class="btn btn--danger" id="btn-remove-participant" disabled>Remove Participant</button>
+            <span id="remove-p-status" style="font-size:12px;color:var(--color-text-muted)"></span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------------------
+         Tab 7: Delete Pod
+    ------------------------------------------------------------------ -->
+    <div class="tab-panel" id="tab-deletepod">
+      <div class="prep-block" style="max-width:560px">
+        <div class="section-heading">Delete a Pod</div>
+        <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 16px">Pods with active members cannot be deleted. Move all members to another pod first, then delete.</p>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <div>
+            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod <span style="color:var(--color-accent)">*</span></label>
+            <select id="delete-pod-select"
+              style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
+              <option value="">Select a pod ...</option>
+            </select>
+          </div>
+
+          <div id="delete-pod-confirm-block" style="display:none;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:14px 16px;font-size:13px">
+            <strong>Confirm deletion:</strong> Pod <span id="delete-pod-confirm-name"></span> will be permanently removed.
+          </div>
+
+          <div id="delete-pod-blocked" style="display:none;background:#fff8f0;border:1px solid #f5c07a;border-radius:var(--radius);padding:12px 16px;font-size:13px;color:#92400e">
+            This pod still has members. Move all members to another pod before deleting.
+          </div>
+
+          <div style="padding-top:4px;display:flex;align-items:center;gap:12px">
+            <button class="btn btn--danger" id="btn-delete-pod" disabled>Delete Pod</button>
+            <span id="delete-pod-status" style="font-size:12px;color:var(--color-text-muted)"></span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /admin-content -->
+
+  <!-- Error state -->
+  <div class="state-panel" id="error-state" style="display:none">
+    <div class="state-panel__title">Unable to load data</div>
+    <div class="state-panel__body" id="error-message"></div>
+    <button class="btn btn--primary btn--sm" onclick="loadData()">Retry</button>
+  </div>
+
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =============================================================================
+// Configuration
+// =============================================================================
+const CONFIG = {
+  cloudantUrl: "https://b27030c0-5465-4cb1-965c-41374f65525a-bluemix.cloudantnosqldb.appdomain.cloud",
+  iamToken:    window.__CLOUDANT_TOKEN__ || "",
+  adminPin:    window.__ADMIN_PIN__ || "1234",
+  apiKey:      (window.__K_HEAD__ && window.__K_REST__)
+                 ? (window.__K_HEAD__ + "-" + window.__K_REST__)
+                 : (window.__CLOUDANT_APIKEY__ || ""),
+};
+
+// =============================================================================
+// refreshIamToken — always-on, deploy-free token refresh
+// 1. Same-origin token.json  →  2. github.com raw URL (CORS: *)  →  3. baked-in token
+// After a fresh token is obtained, exchanges it for a Cloudant IAMSession cookie.
+// The cookie auto-renews on every Cloudant request — session never expires while open.
+// Called on load, every 5 min (progress.html), and on tab focus.
+// =============================================================================
+const RAW_TOKEN_URL =
+  "https://raw.githubusercontent.com/jul3z08101/powerpod-dashboard/gh-pages/token.json";
+const TOKEN_MAX_AGE_S = 3000;
+
+async function fetchTokenJson(url) {
+  const res = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const tok = data.t_h && data.t_r ? (data.t_h + "." + data.t_r)
+            : data.access_token || "";
+  const age = data.built_at ? (Date.now() / 1000 - data.built_at) : 9999;
+  return (tok && age < TOKEN_MAX_AGE_S) ? tok : null;
+}
+
+async function refreshIamToken() {
+  try {
+    let tok = await fetchTokenJson("token.json").catch(() => null);
+    if (!tok) tok = await fetchTokenJson(RAW_TOKEN_URL).catch(() => null);
+    if (!tok) tok = CONFIG.iamToken;
+    if (tok) {
+      CONFIG.iamToken = tok;
+      await fetch(`${CONFIG.cloudantUrl}/_iam_session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: tok }),
+        credentials: "include",
+      }).catch(() => {});
+    }
+  } catch (_) { /* fall through to baked-in token */ }
+}
+
+refreshIamToken();
+
+// =============================================================================
+// PIN gate
+// =============================================================================
+(function () {
+  const overlay  = document.getElementById("pin-overlay");
+  const input    = document.getElementById("pin-input");
+  const errorEl  = document.getElementById("pin-error");
+  const adminMain = document.getElementById("admin-main");
+
+  function attemptUnlock() {
+    const entered = input.value.trim();
+    if (entered === CONFIG.adminPin) {
+      overlay.style.display   = "none";
+      adminMain.style.display = "block";
+      loadData();
+    } else {
+      errorEl.textContent = "Incorrect PIN. Please try again.";
+      input.value = "";
+      input.focus();
+    }
+  }
+
+  document.getElementById("btn-pin-submit").addEventListener("click", attemptUnlock);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") attemptUnlock(); });
+})();
+
+// =============================================================================
+// Cloudant API wrapper
+// =============================================================================
+const Cloudant = {
+  headers() {
+    return {
+      "Authorization": `Bearer ${CONFIG.iamToken}`,
+      "Content-Type":  "application/json",
+    };
+  },
+
+  async fetchAll(db) {
+    const res = await fetch(
+      `${CONFIG.cloudantUrl}/${db}/_all_docs?include_docs=true`,
+      { headers: this.headers(), credentials: "include" }
+    );
+    if (!res.ok) throw new Error(`Cloudant ${db}: HTTP ${res.status}`);
+    const data = await res.json();
+    return data.rows.map(r => r.doc);
+  },
+
+  async get(db, id) {
+    const res = await fetch(`${CONFIG.cloudantUrl}/${db}/${id}`, { headers: this.headers(), credentials: "include" });
+    if (!res.ok) throw new Error(`Cloudant GET ${db}/${id}: HTTP ${res.status}`);
+    return res.json();
+  },
+
+  async put(db, id, doc) {
+    const res = await fetch(`${CONFIG.cloudantUrl}/${db}/${id}`, {
+      method: "PUT", headers: this.headers(), body: JSON.stringify(doc), credentials: "include",
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.reason || `Cloudant PUT ${db}/${id}: HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+
+  async delete(db, id) {
+    // Fetch current _rev first (required by Cloudant for DELETE)
+    const doc = await this.get(db, id);
+    const res = await fetch(
+      `${CONFIG.cloudantUrl}/${db}/${encodeURIComponent(id)}?rev=${encodeURIComponent(doc._rev)}`,
+      { method: "DELETE", headers: this.headers(), credentials: "include" }
+    );
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.reason || `Cloudant DELETE ${db}/${id}: HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+};
+
+// =============================================================================
+// Toast
+// =============================================================================
+let _toastTimer = null;
+function showToast(msg, type = "") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "toast show" + (type ? " toast--" + type : "");
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.className = "toast"; }, 3500);
+}
+
+// =============================================================================
+// Helpers
+// =============================================================================
+const STATUS_LABEL = {
+  "not-started": "Not Started",
+  "in-progress":  "In Progress",
+  "on-track":     "On Track",
+  "at-risk":      "At Risk",
+  "blocked":      "Blocked",
+  "completed":    "Completed",
+};
+
+function statusChip(s) {
+  const cls   = "status--" + (s || "not-started");
+  const label = STATUS_LABEL[s] || "Not Started";
+  return `<span class="status-chip ${cls}">${label}</span>`;
+}
+
+function formatName(name) {
+  if (!name) return "";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return parts[0] + " " + parts[parts.length - 1][0].toUpperCase() + ".";
+}
+
+function truncate(str, max) {
+  if (!str) return "";
+  return str.length > max ? str.slice(0, max - 1) + "\u2026" : str;
+}
+
+function formatDate(iso) {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  } catch { return iso; }
+}
+
+// =============================================================================
+// State
+// =============================================================================
+let _pods = [], _participants = [], _goals = [];
+
+// =============================================================================
+// Load data
+// =============================================================================
+async function loadData() {
+  const loading      = document.getElementById("loading-state");
+  const content      = document.getElementById("admin-content");
+  const errorState   = document.getElementById("error-state");
+  const errorMsg     = document.getElementById("error-message");
+  const lastRefreshed = document.getElementById("last-refreshed");
+
+  loading.style.display    = "block";
+  content.style.display    = "none";
+  errorState.style.display = "none";
+
+  if (!CONFIG.iamToken) {
+    loading.style.display    = "none";
+    errorState.style.display = "flex";
+    errorMsg.textContent =
+      "No Cloudant authentication token is configured. " +
+      "Set window.__CLOUDANT_TOKEN__ in the build step or deployment config.";
+    return;
+  }
+
+  try {
+    const [pods, participants, goals] = await Promise.all([
+      Cloudant.fetchAll("pods"),
+      Cloudant.fetchAll("participants"),
+      Cloudant.fetchAll("goals"),
+    ]);
+
+    _pods         = pods.filter(d => d.type === "pod").sort((a, b) => a.podId.localeCompare(b.podId));
+    _participants = participants.filter(d => d.type === "participant").sort((a, b) => a.name.localeCompare(b.name));
+    _goals        = goals.filter(d => d.type === "goal");
+
+    loading.style.display = "none";
+    content.style.display = "block";
+    lastRefreshed.textContent = "Last refreshed: " + new Date().toLocaleTimeString();
+
+    renderSummary();
+    renderMatrix();
+    renderPodManagement();
+    renderMeetingPrep(1);
+    populateAddParticipantPodDropdown();
+    populateRemoveParticipantDropdown();
+    populateDeletePodDropdown();
+
+  } catch (err) {
+    loading.style.display    = "none";
+    errorState.style.display = "flex";
+    errorMsg.textContent = err.message || "An unexpected error occurred.";
+  }
+}
+
+document.getElementById("btn-refresh").addEventListener("click", loadData);
+
+// =============================================================================
+// Summary bar
+// =============================================================================
+function renderSummary() {
+  const goalMap   = Object.fromEntries(_goals.map(g => [g.participantId, g]));
+  const statuses  = _participants.map(p => (goalMap[p._id] || {}).status || "not-started");
+  const goalsSet  = statuses.filter(s => s !== "not-started").length;
+  const onTrack   = statuses.filter(s => s === "on-track").length;
+  const completed = statuses.filter(s => s === "completed").length;
+  const blocked   = statuses.filter(s => s === "blocked").length;
+  const atRisk    = statuses.filter(s => s === "at-risk").length;
+
+  const stats = [
+    { value: _participants.length, label: "Participants" },
+    { value: _pods.length,         label: "Pods" },
+    { value: goalsSet,             label: "Goals Set" },
+    { value: onTrack,              label: "On Track" },
+    { value: completed,            label: "Completed" },
+    { value: blocked + atRisk,     label: "Need Attention" },
+  ];
+
+  document.getElementById("summary-bar").innerHTML = stats.map(s => `
+    <div class="stat-card">
+      <div class="stat-card__value">${s.value}</div>
+      <div class="stat-card__label">${s.label}</div>
+    </div>`).join("");
+}
+
+// =============================================================================
+// Engagement score — 40 pts Session 1 · 40 pts Session 2 · 20 pts Session 3
+// Status-weighted: at-risk/blocked = 0, on-track = partial, completed = full
+// =============================================================================
+const S2_STATUS_PTS = {
+  "completed":   10,
+  "on-track":     7,
+  "in-progress":  5,
+  "not-started":  2,
+  "at-risk":      0,
+  "blocked":      0,
+};
+const S3_STATUS_PTS = {
+  "completed":   10,
+  "on-track":     6,
+  "in-progress":  4,
+  "not-started":  1,
+  "at-risk":      0,
+  "blocked":      0,
+};
+
+function engagementScore(goal) {
+  if (!goal) return 0;
+
+  // --- Session 1 (max 40) ---
+  let s1 = 0;
+  if (goal.goalTitle      && goal.goalTitle.trim())      s1 += 10;
+  if (goal.smartStatement && goal.smartStatement.trim()) s1 += 10;
+  if (goal.goalCategory   && goal.goalCategory.trim())   s1 +=  5;
+  if (goal.whyItMatters   && goal.whyItMatters.trim())   s1 +=  5;
+  if (goal.firstAction    && goal.firstAction.trim())    s1 +=  5;
+  if (goal.session1GoalSubmitted)                        s1 +=  3;
+  if (goal.session1FirstActionCompleted)                 s1 +=  2;
+
+  // --- Session 2 (max 40) ---
+  let s2 = 0;
+  const pct = goal.percentComplete || 0;
+  s2 += Math.round((pct / 100) * 25);
+  s2 += (S2_STATUS_PTS[goal.session2Status] ?? 0);
+  if (goal.session2CourseCorrection && goal.session2CourseCorrection.trim()) s2 += 5;
+
+  // --- Session 3 (max 20) ---
+  let s3 = 0;
+  s3 += (S3_STATUS_PTS[goal.session3FinalStatus] ?? 0);
+  if (goal.session3Result        && goal.session3Result.trim())         s3 +=  5;
+  if (goal.session3LessonLearned && goal.session3LessonLearned.trim())  s3 +=  5;
+
+  return Math.min(s1, 40) + Math.min(s2, 40) + Math.min(s3, 20);
+}
+
+// =============================================================================
+// Participant matrix
+// =============================================================================
+function renderMatrix() {
+  const goalMap = Object.fromEntries(_goals.map(g => [g.participantId, g]));
+  const podMap  = Object.fromEntries(_pods.map(p => [p._id, p]));
+
+  const rows = _participants.map(p => {
+    const goal = goalMap[p._id] || {};
+    const pct  = engagementScore(goal);
+
+    return `<tr>
+      <td class="td-name">${formatName(p.name)}</td>
+      <td class="td-muted">${podMap[p.podId]?.name || p.podId}</td>
+      <td class="td-muted">${p.podRole || ""}</td>
+      <td>${truncate(goal.goalTitle || "", 40) || '<span style="color:var(--color-text-muted);font-style:italic">Not set</span>'}</td>
+      <td class="td-muted">${goal.goalCategory || ""}</td>
+      <td>${statusChip(goal.status)}</td>
+      <td>
+        <div class="progress-cell">
+          <div class="progress-bar-sm">
+            <div class="progress-bar-sm__fill" style="width:${pct}%"></div>
+          </div>
+          <span class="progress-pct">${pct}%</span>
+        </div>
+      </td>
+      <td class="td-muted">${truncate(goal.blocker || goal.session2Blocker || "", 50)}</td>
+      <td class="td-muted">${truncate(goal.supportNeeded || "", 50)}</td>
+      <td class="td-muted">${formatDate(goal.lastUpdated)}</td>
+      <td>
+        <a href="progress.html?id=${encodeURIComponent(p._id)}"
+           class="btn btn--ghost btn--sm">View</a>
+      </td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("matrix-body").innerHTML = rows;
+}
+
+// =============================================================================
+// Pod management
+// =============================================================================
+function renderPodManagement() {
+  const podMap  = Object.fromEntries(_pods.map(p => [p._id, p]));
+  const goalMap = Object.fromEntries(_goals.map(g => [g.participantId, g]));
+
+  const podOptions = _pods.map(p =>
+    `<option value="${p._id}">${p.name}</option>`
+  ).join("");
+
+  const cards = _pods.map(pod => {
+    const members = _participants.filter(p => p.podId === pod._id);
+
+    const memberRows = members.map(p => {
+      const goal   = goalMap[p._id] || {};
+      const status = goal.status || "not-started";
+
+      return `<div class="pod-member-row" data-participant-id="${p._id}">
+        <div class="pod-member-info">
+          <div class="pod-member-name">${formatName(p.name)}</div>
+          <div class="pod-member-role">${p.podRole || ""}</div>
+        </div>
+        ${statusChip(status)}
+        <select class="pod-member-select" data-participant-id="${p._id}" data-current-pod="${pod._id}">
+          ${_pods.map(op =>
+            `<option value="${op._id}" ${op._id === pod._id ? "selected" : ""}>${op.name}</option>`
+          ).join("")}
+        </select>
+      </div>`;
+    }).join("");
+
+    return `<div class="pod-mgmt-card">
+      <div class="pod-mgmt-card__header">
+        <div class="pod-mgmt-card__name">${pod.name}</div>
+        <span style="font-size:12px;color:var(--color-text-muted)">${members.length} members</span>
+      </div>
+      <div class="pod-mgmt-card__body">
+        ${memberRows || '<div style="font-size:13px;color:var(--color-text-muted);padding:8px 0">No members</div>'}
+        <div style="margin-top:14px">
+          <button class="btn btn--primary btn--sm" data-pod-id="${pod._id}" data-action="save-moves">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("pod-mgmt-grid").innerHTML = cards;
+
+  // Save moves handler
+  document.querySelectorAll("[data-action='save-moves']").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const podId   = btn.dataset.podId;
+      const selects = document.querySelectorAll(
+        `[data-current-pod="${podId}"]`
+      );
+      const moves = [];
+      selects.forEach(sel => {
+        if (sel.value !== sel.dataset.currentPod) {
+          moves.push({ participantId: sel.dataset.participantId, newPodId: sel.value });
+        }
+      });
+
+      if (!moves.length) {
+        showToast("No changes to save for this pod.");
+        return;
+      }
+
+      btn.disabled = true;
+      try {
+        for (const move of moves) {
+          const participant = await Cloudant.get("participants", move.participantId);
+          const newPod      = _pods.find(p => p._id === move.newPodId);
+          participant.podId   = move.newPodId;
+          participant.podName = newPod ? newPod.name : move.newPodId;
+          await Cloudant.put("participants", participant._id, participant);
+
+          // Also update the goal's podId reference
+          const goalId = "G-" + move.participantId.replace(/^P-/, "");
+          try {
+            const goal = await Cloudant.get("goals", goalId);
+            goal.podId = move.newPodId;
+            await Cloudant.put("goals", goal._id, goal);
+          } catch (_) { /* goal may not exist yet — skip */ }
+        }
+        showToast(`${moves.length} member(s) moved successfully.`, "success");
+        await loadData();
+      } catch (err) {
+        showToast("Move failed: " + err.message, "error");
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+// =============================================================================
+// Meeting prep summary generator
+// =============================================================================
+function buildPrepSummary(sessionNum) {
+  const goalMap = Object.fromEntries(_goals.map(g => [g.participantId, g]));
+  const podMap  = Object.fromEntries(_pods.map(p => [p._id, p]));
+  const now     = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+  const SESSION_DATE = { 1: "October 1, 2026", 2: "October 22, 2026", 3: "November 12, 2026" };
+  const SESSION_THEME = {
+    1: "Kickoff — Goal Setting and Pod Formation",
+    2: "Progress Check-In and Course Correction",
+    3: "Final Showcase — Results and Lessons Learned",
+  };
+
+  let out = "";
+  out += `THE POWER POD — GOALS PROGRAM 2026\n`;
+  out += `Session ${sessionNum} Meeting Prep Summary\n`;
+  out += `${SESSION_DATE[sessionNum]} | ${SESSION_THEME[sessionNum]}\n`;
+  out += `Generated: ${now}\n`;
+  out += `${"=".repeat(60)}\n\n`;
+
+  const statuses   = _participants.map(p => (goalMap[p._id] || {}).status || "not-started");
+  const goalsSet   = statuses.filter(s => s !== "not-started").length;
+  const onTrack    = statuses.filter(s => s === "on-track").length;
+  const completed  = statuses.filter(s => s === "completed").length;
+  const blocked    = statuses.filter(s => s === "blocked").length;
+  const atRisk     = statuses.filter(s => s === "at-risk").length;
+
+  out += `PROGRAM SNAPSHOT\n`;
+  out += `${"—".repeat(40)}\n`;
+  out += `Total Participants : ${_participants.length}\n`;
+  out += `Goals Set          : ${goalsSet}\n`;
+  out += `On Track           : ${onTrack}\n`;
+  out += `Completed          : ${completed}\n`;
+  out += `At Risk            : ${atRisk}\n`;
+  out += `Blocked            : ${blocked}\n\n`;
+
+  _pods.forEach(pod => {
+    const members = _participants.filter(p => p.podId === pod._id);
+    out += `POD: ${pod.name.toUpperCase()}\n`;
+    out += `${"—".repeat(40)}\n`;
+
+    members.forEach(p => {
+      const goal   = goalMap[p._id] || {};
+      const status = STATUS_LABEL[goal.status] || "Not Started";
+      const pct    = engagementScore(goal);
+
+      out += `  ${p.name} (${p.podRole || "Member"})\n`;
+      out += `    Goal     : ${goal.goalTitle || "Not set"}\n`;
+      out += `    Status   : ${status}  (${pct}% engaged)\n`;
+
+      if (sessionNum >= 2) {
+        if (goal.blocker || goal.session2Blocker) {
+          out += `    Blocker  : ${goal.blocker || goal.session2Blocker}\n`;
+        }
+        if (goal.supportNeeded) {
+          out += `    Support  : ${goal.supportNeeded}\n`;
+        }
+      }
+
+      if (sessionNum === 3) {
+        if (goal.session3Result) {
+          out += `    Result   : ${goal.session3Result}\n`;
+        }
+        if (goal.session3LessonLearned) {
+          out += `    Lesson   : ${goal.session3LessonLearned}\n`;
+        }
+      }
+    });
+    out += "\n";
+  });
+
+  if (sessionNum >= 2) {
+    const needingSupport = _participants.filter(p => {
+      const g = goalMap[p._id] || {};
+      return g.status === "blocked" || g.status === "at-risk";
+    });
+    if (needingSupport.length) {
+      out += `PARTICIPANTS NEEDING SUPPORT\n`;
+      out += `${"—".repeat(40)}\n`;
+      needingSupport.forEach(p => {
+        const g  = goalMap[p._id] || {};
+        const po = podMap[p.podId] || {};
+        out += `  ${p.name} (${po.name || p.podId}) — ${STATUS_LABEL[g.status]}\n`;
+        if (g.blocker || g.session2Blocker) {
+          out += `    Blocker: ${g.blocker || g.session2Blocker}\n`;
+        }
+      });
+      out += "\n";
+    }
+  }
+
+  return out;
+}
+
+// =============================================================================
+// Meeting prep tab
+// =============================================================================
+let _activePrepSession = 1;
+
+function renderMeetingPrep(sessionNum) {
+  _activePrepSession = sessionNum;
+  const labels = { 1: "Session 1 Summary", 2: "Session 2 Summary", 3: "Session 3 Summary" };
+  document.getElementById("prep-label").textContent = labels[sessionNum];
+  document.getElementById("prep-output").value = buildPrepSummary(sessionNum);
+
+  [1, 2, 3].forEach(n => {
+    const btn = document.getElementById(`btn-prep-s${n}`);
+    btn.className = "btn btn--sm " + (n === sessionNum ? "btn--primary" : "btn--ghost");
+  });
+}
+
+[1, 2, 3].forEach(n => {
+  document.getElementById(`btn-prep-s${n}`).addEventListener("click", () => renderMeetingPrep(n));
+});
+
+document.getElementById("btn-copy-prep").addEventListener("click", () => {
+  const text = document.getElementById("prep-output").value;
+  navigator.clipboard.writeText(text).then(
+    ()  => showToast("Summary copied to clipboard.", "success"),
+    ()  => showToast("Copy failed — please select and copy manually.", "error")
+  );
+});
+
+// =============================================================================
+// Tabs
+// =============================================================================
+document.getElementById("admin-tabs").addEventListener("click", e => {
+  const btn = e.target.closest(".tab-btn");
+  if (!btn) return;
+  document.querySelectorAll("#admin-tabs .tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById(btn.dataset.tab).classList.add("active");
+});
+
+// =============================================================================
+// Add Participant
+// =============================================================================
+function populateAddParticipantPodDropdown() {
+  const sel = document.getElementById("new-p-pod");
+  sel.innerHTML = '<option value="">Select a pod ...</option>';
+  _pods.forEach(pod => {
+    const opt = document.createElement("option");
+    opt.value       = pod._id;
+    opt.textContent = pod.name;
+    sel.appendChild(opt);
+  });
+}
+
+document.getElementById("btn-add-participant").addEventListener("click", async () => {
+  const name  = document.getElementById("new-p-name").value.trim();
+  const email = document.getElementById("new-p-email").value.trim();
+  const podId = document.getElementById("new-p-pod").value;
+  const role  = document.getElementById("new-p-role").value;
+  const status = document.getElementById("add-p-status");
+
+  if (!name || !email || !podId || !role) {
+    status.textContent = "All fields are required.";
+    status.style.color = "var(--color-error)";
+    return;
+  }
+
+  const pod = _pods.find(p => p._id === podId) || {};
+  const pId = "P-" + email.split("@")[0].replace(/\./g, "-");
+  const gId = "G-" + pId.replace(/^P-/, "");
+
+  const participant = {
+    _id: pId, type: "participant",
+    name, email,
+    podId, podName: pod.name || podId,
+    podRole: role, role: "participant",
+  };
+
+  const goal = {
+    _id: gId, type: "goal",
+    participantId: pId, participantName: name, podId,
+    goalTitle: "", smartStatement: "", whyItMatters: "",
+    goalCategory: "", successMetric: "", targetValue: "", dueDate: "",
+    status: "not-started", percentComplete: 0,
+    firstAction: "", nextAction: "", blocker: "", supportNeeded: "",
+    evidenceOfProgress: "", notes: "",
+    session1GoalSubmitted: false, session1FirstActionCompleted: false, session1Notes: "",
+    session2Status: "", session2Blocker: "", session2CourseCorrection: "", session2Notes: "",
+    session3FinalStatus: "", session3Result: "", session3LessonLearned: "", session3NextChapter: "", session3Notes: "",
+    managerConversationNeeded: false, successFactorsGoalAdded: "no", lastUpdated: "",
+  };
+
+  const btn = document.getElementById("btn-add-participant");
+  btn.disabled = true;
+  status.textContent = "Saving ...";
+  status.style.color = "var(--color-text-muted)";
+
+  try {
+    await Cloudant.put("participants", pId, participant);
+    await Cloudant.put("goals", gId, goal);
+    status.textContent = name + " added successfully.";
+    status.style.color = "var(--color-success)";
+    document.getElementById("new-p-name").value  = "";
+    document.getElementById("new-p-email").value = "";
+    document.getElementById("new-p-pod").value   = "";
+    document.getElementById("new-p-role").value  = "";
+    showToast(name + " added.", "success");
+    await loadData();
+  } catch (err) {
+    status.textContent = "Error: " + err.message;
+    status.style.color = "var(--color-error)";
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// =============================================================================
+// Create Pod
+// =============================================================================
+document.getElementById("btn-create-pod").addEventListener("click", async () => {
+  const podName = document.getElementById("new-pod-name").value.trim();
+  const podId   = document.getElementById("new-pod-id").value.trim().toLowerCase().replace(/\s+/g, "-");
+  const status  = document.getElementById("create-pod-status");
+
+  if (!podName || !podId) {
+    status.textContent = "Pod name and ID are required.";
+    status.style.color = "var(--color-error)";
+    return;
+  }
+
+  if (_pods.find(p => p._id === podId)) {
+    status.textContent = "A pod with this ID already exists.";
+    status.style.color = "var(--color-error)";
+    return;
+  }
+
+  const nextNum = _pods.length + 1;
+  const pod = {
+    _id: podId, type: "pod",
+    podId: "POD-" + nextNum,
+    name: podName,
+    members: [],
+    wins: "", blockers: "", supportRequests: "", nextCommitments: "",
+    hasMetOutside: false, checkInsCompleted: 0,
+    session1Notes: "", session2Notes: "", session3Notes: "",
+  };
+
+  const btn = document.getElementById("btn-create-pod");
+  btn.disabled = true;
+  status.textContent = "Creating ...";
+  status.style.color = "var(--color-text-muted)";
+
+  try {
+    await Cloudant.put("pods", podId, pod);
+    status.textContent = "Pod \"" + podName + "\" created.";
+    status.style.color = "var(--color-success)";
+    document.getElementById("new-pod-name").value = "";
+    document.getElementById("new-pod-id").value   = "";
+    showToast("Pod \"" + podName + "\" created.", "success");
+    await loadData();
+  } catch (err) {
+    status.textContent = "Error: " + err.message;
+    status.style.color = "var(--color-error)";
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// =============================================================================
+// Remove Participant
+// =============================================================================
+function populateRemoveParticipantDropdown() {
+  const sel = document.getElementById("remove-p-select");
+  sel.innerHTML = '<option value="">Select a participant ...</option>';
+  _participants.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value       = p._id;
+    opt.textContent = formatName(p.name) + " (" + (p.podName || p.podId) + ")";
+    sel.appendChild(opt);
+  });
+}
+
+document.getElementById("remove-p-select").addEventListener("change", function () {
+  const confirmBlock = document.getElementById("remove-p-confirm-block");
+  const confirmName  = document.getElementById("remove-p-confirm-name");
+  const btn          = document.getElementById("btn-remove-participant");
+  const status       = document.getElementById("remove-p-status");
+
+  status.textContent = "";
+  if (this.value) {
+    const p = _participants.find(x => x._id === this.value);
+    confirmName.textContent = p ? formatName(p.name) : this.value;
+    confirmBlock.style.display = "block";
+    btn.disabled = false;
+  } else {
+    confirmBlock.style.display = "none";
+    btn.disabled = true;
+  }
+});
+
+document.getElementById("btn-remove-participant").addEventListener("click", async () => {
+  const sel    = document.getElementById("remove-p-select");
+  const pId    = sel.value;
+  const status = document.getElementById("remove-p-status");
+  const btn    = document.getElementById("btn-remove-participant");
+
+  if (!pId) return;
+
+  const p    = _participants.find(x => x._id === pId);
+  const name = p ? formatName(p.name) : pId;
+  const gId  = "G-" + pId.replace(/^P-/, "");
+
+  btn.disabled = true;
+  status.textContent = "Removing ...";
+  status.style.color = "var(--color-text-muted)";
+
+  try {
+    await Cloudant.delete("participants", pId);
+    // Goal record may not exist for edge cases — ignore 404
+    try { await Cloudant.delete("goals", gId); } catch (_) {}
+
+    status.textContent = name + " removed.";
+    status.style.color = "var(--color-success)";
+    document.getElementById("remove-p-confirm-block").style.display = "none";
+    sel.value = "";
+    showToast(name + " removed.", "success");
+    await loadData();
+  } catch (err) {
+    status.textContent = "Error: " + err.message;
+    status.style.color = "var(--color-error)";
+    btn.disabled = false;
+  }
+});
+
+// =============================================================================
+// Delete Pod
+// =============================================================================
+function populateDeletePodDropdown() {
+  const sel = document.getElementById("delete-pod-select");
+  sel.innerHTML = '<option value="">Select a pod ...</option>';
+  _pods.forEach(pod => {
+    const memberCount = _participants.filter(p => p.podId === pod._id).length;
+    const opt = document.createElement("option");
+    opt.value       = pod._id;
+    opt.textContent = pod.name + " (" + memberCount + " member" + (memberCount !== 1 ? "s" : "") + ")";
+    sel.appendChild(opt);
+  });
+}
+
+document.getElementById("delete-pod-select").addEventListener("change", function () {
+  const confirmBlock  = document.getElementById("delete-pod-confirm-block");
+  const confirmName   = document.getElementById("delete-pod-confirm-name");
+  const blockedBlock  = document.getElementById("delete-pod-blocked");
+  const btn           = document.getElementById("btn-delete-pod");
+  const status        = document.getElementById("delete-pod-status");
+
+  status.textContent = "";
+  confirmBlock.style.display = "none";
+  blockedBlock.style.display = "none";
+  btn.disabled = true;
+
+  if (!this.value) return;
+
+  const pod         = _pods.find(x => x._id === this.value);
+  const memberCount = _participants.filter(p => p.podId === this.value).length;
+
+  if (memberCount > 0) {
+    blockedBlock.style.display = "block";
+  } else {
+    confirmName.textContent    = pod ? pod.name : this.value;
+    confirmBlock.style.display = "block";
+    btn.disabled = false;
+  }
+});
+
+document.getElementById("btn-delete-pod").addEventListener("click", async () => {
+  const sel    = document.getElementById("delete-pod-select");
+  const podId  = sel.value;
+  const status = document.getElementById("delete-pod-status");
+  const btn    = document.getElementById("btn-delete-pod");
+
+  if (!podId) return;
+
+  // Re-check no members slipped in
+  const memberCount = _participants.filter(p => p.podId === podId).length;
+  if (memberCount > 0) {
+    status.textContent = "Cannot delete: pod still has members.";
+    status.style.color = "var(--color-error)";
+    return;
+  }
+
+  const pod  = _pods.find(x => x._id === podId);
+  const name = pod ? pod.name : podId;
+
+  btn.disabled = true;
+  status.textContent = "Deleting ...";
+  status.style.color = "var(--color-text-muted)";
+
+  try {
+    await Cloudant.delete("pods", podId);
+    status.textContent = "Pod \"" + name + "\" deleted.";
+    status.style.color = "var(--color-success)";
+    document.getElementById("delete-pod-confirm-block").style.display = "none";
+    sel.value = "";
+    showToast("Pod \"" + name + "\" deleted.", "success");
+    await loadData();
+  } catch (err) {
+    status.textContent = "Error: " + err.message;
+    status.style.color = "var(--color-error)";
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
