@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Progress — BWF&amp;O Power Pod 2026</title>
+  <style>
+    /* -----------------------------------------------------------------------
+       Design tokens  (kept in sync with index.html)
+    ----------------------------------------------------------------------- */
+    :root {
+      --color-bg:           #ffffff;
+      --color-surface:      #f7f6fb;
+      --color-surface-alt:  #f0edf8;
+      --color-border:       #e0daea;
+      --color-text:         #1a1523;
+      --color-text-muted:   #6b6478;
+      --color-accent:       #7c5cd8;
+      --color-accent-light: #ede9f9;
+      --color-accent-dark:  #5a3fb5;
+      --color-success:      #16a34a;
+      --color-success-bg:   #d1fae5;
+      --color-error:        #b91c1c;
+      --color-error-bg:     #fee2e2;
+      --color-rose:         #d64f7a;
+      --color-rose-light:   #fce8f0;
+      --color-rose-muted:   #f3b8cf;
+
+      --radius:    8px;
+      --radius-lg: 12px;
+      --shadow:    0 1px 4px rgba(0,0,0,0.08);
+      --shadow-md: 0 2px 8px rgba(0,0,0,0.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      background: var(--color-surface);
+      color: var(--color-text);
+      min-height: 100vh;
+    }
+
+    a { color: var(--color-accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* -----------------------------------------------------------------------
+       Header
+    ----------------------------------------------------------------------- */
+    .app-header {
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .app-header__brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 2px solid var(--color-accent-light);
+    }
+
+    .brand-mark img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center 30%;
+      display: block;
+    }
+
+    .app-header__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+      letter-spacing: -0.01em;
+    }
+
+    .app-header__subtitle { font-size: 12px; color: var(--color-text-muted); }
+
+    /* -----------------------------------------------------------------------
+       Layout
+    ----------------------------------------------------------------------- */
+    .main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    /* -----------------------------------------------------------------------
+       Participant identity card
+    ----------------------------------------------------------------------- */
+    .identity-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .identity-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--color-accent-light);
+      color: var(--color-accent-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      flex-shrink: 0;
+      border: 2px solid var(--color-rose-muted);
+    }
+
+    /* -----------------------------------------------------------------------
+       Motivational banner — full-bleed hero image
+    ----------------------------------------------------------------------- */
+    .motiv-banner {
+      position: relative;
+      border-radius: 0;
+      overflow: hidden;
+      margin: 0 calc(-50vw + 50%) 32px;
+      min-height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .motiv-banner__img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 40%;
+    }
+
+    .motiv-banner__overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(90,63,181,0.82) 0%, rgba(124,92,216,0.70) 100%);
+    }
+
+    .motiv-banner__content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 44px 48px 40px;
+      width: 100%;
+      max-width: 760px;
+    }
+
+    .motiv-banner__eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.72);
+      margin-bottom: 12px;
+    }
+
+    .motiv-banner__title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .motiv-banner__body {
+      font-size: 15px;
+      color: rgba(255,255,255,0.88);
+      line-height: 1.6;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .identity-info__name {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .identity-info__meta {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-top: 3px;
+    }
+
+    .identity-info__meta span + span::before {
+      content: " \00b7 ";
+    }
+
+    /* -----------------------------------------------------------------------
+       Participant selector (shown when no ?id= param)
+    ----------------------------------------------------------------------- */
+    .selector-panel {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 28px 28px 32px;
+      box-shadow: var(--shadow);
+      margin-bottom: 28px;
+    }
+
+    .selector-panel__heading {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .selector-panel__sub {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      margin-bottom: 20px;
+    }
+
+    .selector-panel select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      color: var(--color-text);
+      background: var(--color-bg);
+      margin-bottom: 14px;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b6478' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+
+    .selector-panel select:focus {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 1px;
+    }
+
+    /* -----------------------------------------------------------------------
+       Tabs
+    ----------------------------------------------------------------------- */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid var(--color-border);
+      margin-bottom: 24px;
+      gap: 0;
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .tab-btn:hover { color: var(--color-text); }
+
+    .tab-btn.active {
+      color: var(--color-accent);
+      border-bottom-color: var(--color-accent);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* -----------------------------------------------------------------------
+       Form card
+    ----------------------------------------------------------------------- */
+    .form-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .form-section-heading {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-muted);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group:last-child { margin-bottom: 0; }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+
+    .form-group label .required {
+      color: var(--color-accent);
+      margin-left: 2px;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="date"],
+    .form-group input[type="number"],
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--color-text);
+      background: var(--color-bg);
+      transition: border-color 0.15s, outline 0.15s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 1px;
+      border-color: transparent;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-group select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b6478' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* -----------------------------------------------------------------------
+       Progress slider
+    ----------------------------------------------------------------------- */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--color-accent);
+      height: 4px;
+      padding: 0;
+      border: none;
+      outline: none;
+    }
+
+    .slider-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-accent);
+      min-width: 40px;
+      text-align: right;
+    }
+
+    /* -----------------------------------------------------------------------
+       Checkbox row
+    ----------------------------------------------------------------------- */
+    .check-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+    }
+
+    .check-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--color-accent);
+      flex-shrink: 0;
+    }
+
+    .check-group label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text);
+      text-transform: none;
+      letter-spacing: 0;
+      margin-bottom: 0;
+    }
+
+    /* -----------------------------------------------------------------------
+       Buttons
+    ----------------------------------------------------------------------- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s, opacity 0.15s;
+      line-height: 1;
+    }
+
+    .btn--primary {
+      background: var(--color-accent);
+      color: #ffffff;
+    }
+
+    .btn--primary:hover  { background: var(--color-accent-dark); }
+    .btn--primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--color-accent);
+      border: 1px solid var(--color-border);
+    }
+
+    .btn--ghost:hover { background: var(--color-accent-light); }
+
+    .btn--sm { padding: 6px 14px; font-size: 12px; }
+
+    .form-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--color-border);
+    }
+
+    /* -----------------------------------------------------------------------
+       Toast notification
+    ----------------------------------------------------------------------- */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--color-text);
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      z-index: 200;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast--success { background: var(--color-success); }
+    .toast--error   { background: var(--color-error); }
+
+    /* -----------------------------------------------------------------------
+       Validation error
+    ----------------------------------------------------------------------- */
+    .field-error {
+      font-size: 11px;
+      color: var(--color-error);
+      margin-top: 4px;
+      display: none;
+    }
+
+    .form-group.has-error input,
+    .form-group.has-error select,
+    .form-group.has-error textarea {
+      border-color: var(--color-error);
+    }
+
+    .form-group.has-error .field-error { display: block; }
+
+    /* -----------------------------------------------------------------------
+       Loading / state panels
+    ----------------------------------------------------------------------- */
+    .state-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 24px;
+      color: var(--color-text-muted);
+      gap: 12px;
+    }
+
+    .state-panel__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .state-panel__body {
+      font-size: 13px;
+      text-align: center;
+      max-width: 380px;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--color-border);
+      border-top-color: var(--color-accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* -----------------------------------------------------------------------
+       Session locked notice
+    ----------------------------------------------------------------------- */
+    .locked-notice {
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--color-text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* -----------------------------------------------------------------------
+       Responsive
+    ----------------------------------------------------------------------- */
+    @media (max-width: 600px) {
+      .app-header { padding: 0 16px; }
+      .main { padding: 20px 16px 48px; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+      .identity-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
+  </style>
+<script>
+  (function(){
+    var _h = "eyJraWQiOiIyMDI2MTAwODA4MjkiLCJhbGciOiJSUzI1NiJ9";
+    var _r = "eyJpYW1faWQiOiJpYW0tU2VydmljZUlkLTJiZGJkYjA4LTRhYTQtNGZlMS1iNWM4LWQ3ZDhmYmU5MWY3OCIsImlkIjoiaWFtLVNlcnZpY2VJZC0yYmRiZGIwOC00YWE0LTRmZTEtYjVjOC1kN2Q4ZmJlOTFmNzgiLCJyZWFsbWlkIjoiaWFtIiwianRpIjoiYmI1NmI1YjEtYWE2ZS00NjFhLTllNWYtN2Q0YjBiMmNkZDllIiwiaWRlbnRpZmllciI6IlNlcnZpY2VJZC0yYmRiZGIwOC00YWE0LTRmZTEtYjVjOC1kN2Q4ZmJlOTFmNzgiLCJuYW1lIjoicG93ZXJwb2QtZGFzaGJvYXJkIiwic3ViIjoiU2VydmljZUlkLTJiZGJkYjA4LTRhYTQtNGZlMS1iNWM4LWQ3ZDhmYmU5MWY3OCIsInN1Yl90eXBlIjoiU2VydmljZUlkIiwiYXV0aG4iOnsic3ViIjoiU2VydmljZUlkLTJiZGJkYjA4LTRhYTQtNGZlMS1iNWM4LWQ3ZDhmYmU5MWY3OCIsImlhbV9pZCI6ImlhbS1TZXJ2aWNlSWQtMmJkYmRiMDgtNGFhNC00ZmUxLWI1YzgtZDdkOGZiZTkxZjc4Iiwic3ViX3R5cGUiOiJTZXJ2aWNlSWQiLCJuYW1lIjoicG93ZXJwb2QtZGFzaGJvYXJkIn0sImFwaWtleV91dWlkIjoiQXBpS2V5LTkxZjM1ZWJjLWNlZmQtNGZlMC05M2RhLTIzY2VlNGI5ZDAwNiIsImFjY291bnQiOnsidmFsaWQiOnRydWUsImJzcyI6ImU0MzA0MWEzNjAyYTQ5YzNiMGZjM2RmNjI1ZDlmNDI1IiwiZnJvemVuIjp0cnVlfSwiaWF0IjoxNzkxNjYxODYwLCJleHAiOjE3OTE2NjU0NjAsImlzcyI6Imh0dHBzOi8vaWFtLmNsb3VkLmlibS5jb20vaWRlbnRpdHkiLCJncmFudF90eXBlIjoidXJuOmlibTpwYXJhbXM6b2F1dGg6Z3JhbnQtdHlwZTphcGlrZXkiLCJzY29wZSI6ImlibSBvcGVuaWQiLCJjbGllbnRfaWQiOiJkZWZhdWx0IiwiYWNyIjoxLCJhbXIiOlsicHdkIl19.OjTt6JVPWlhYP-vNAxI9r8pCXC-SZ61CwJLbbisfeTi6wMwwb6cQzZllx1SXjJ7nNjJRjrkd5zFdaR4m_ndy6T2hcbF3NsxMRhM4l75Y2yi1OiCfwZY3Z1Xv_lVESvHwTjrdhN9V6fVr5-aoQPVct4CDlmBvU-plqILlhVKVuz7BYZfxdNL0lXwOQAUYlIsx0BgPJCHn5s4m9wIl5vhW4Fp5tjd2JHpjA_YQQ6YQcmhLgUYzJCTu8iHLD1uH-T5KuujaF8rjwzFwUpzY20Onec9zXaaigkuzdlfhZQk45cdE0ATgav43EqhdIdj3Mbcr0m5eA3YMKkbP1Dsza6godw";
+    window.__CLOUDANT_TOKEN__ = _h + "." + _r;
+    window.__ADMIN_PIN__      = "81913";
+    window.__K_HEAD__ = "bEBG9ikl2CZCEjZ_71TZr";
+    window.__K_REST__ = "CJEqH-394QOUAeL_5LV9EI";
+  })();
+</script>
+</head>
+<body>
+
+<!-- =========================================================================
+     Header
+========================================================================== -->
+<header class="app-header">
+  <div class="app-header__brand">
+    <div class="brand-mark" aria-hidden="true">
+      <img src="image/istockphoto-2192204087-612x612.jpg" alt="" />
+    </div>
+    <div>
+      <div class="app-header__title">My Progress</div>
+      <div class="app-header__subtitle">BWF&amp;O Power Pod — Goals Program 2026</div>
+    </div>
+  </div>
+  <div>
+    <a href="index.html" class="btn btn--ghost btn--sm">Back to Dashboard</a>
+  </div>
+</header>
+
+<!-- =========================================================================
+     Main
+========================================================================== -->
+<main class="main">
+
+  <!-- Loading -->
+  <div class="state-panel" id="loading-state">
+    <div class="spinner"></div>
+    <div class="state-panel__title">Loading your record</div>
+    <div class="state-panel__body">Connecting to IBM Cloudant ...</div>
+  </div>
+
+  <!-- Participant selector (shown when no ?id= in URL) -->
+  <div id="selector-view" style="display:none">
+
+    <div class="motiv-banner">
+      <img class="motiv-banner__img" src="image/1.webp" alt="" aria-hidden="true" />
+      <div class="motiv-banner__overlay"></div>
+      <div class="motiv-banner__content">
+        <div class="motiv-banner__eyebrow">BWF&amp;O Power Pod &middot; Goals Program 2026</div>
+        <div class="motiv-banner__title">You belong here. Your goal matters.</div>
+        <div class="motiv-banner__body">This is your space to set intentions, track progress, and show up for yourself. Progress over perfection, every step counts.</div>
+      </div>
+    </div>
+
+    <div class="selector-panel">
+      <div class="selector-panel__heading">Welcome to the BWF&amp;O Power Pod</div>
+      <div class="selector-panel__sub">Select your pod and then your name to view and update your goal progress.</div>
+      <select id="pod-select-filter">
+        <option value="">Step 1 — Select your pod ...</option>
+      </select>
+      <select id="participant-select" style="display:none">
+        <option value="">Step 2 — Select your name ...</option>
+      </select>
+      <button class="btn btn--primary" id="btn-select-participant">Continue</button>
+    </div>
+  </div>
+
+  <!-- Progress form (shown after participant is identified) -->
+  <div id="progress-view" style="display:none">
+
+    <!-- Identity card -->
+    <div class="identity-card" id="identity-card"></div>
+
+    <!-- Session tabs -->
+    <div class="tabs" id="session-tabs">
+      <button class="tab-btn active" data-tab="session1">Session 1</button>
+      <button class="tab-btn" data-tab="session2">Session 2</button>
+      <button class="tab-btn" data-tab="session3">Session 3</button>
+    </div>
+
+    <!-- ----------------------------------------------------------------
+         Session 1 — Goal Setting (Oct 1)
+    ---------------------------------------------------------------- -->
+    <div class="tab-panel active" id="tab-session1">
+
+      <form id="form-session1" novalidate>
+
+        <div class="form-card">
+          <div class="form-section-heading">Your Goal</div>
+
+          <div class="form-group" id="fg-goalTitle">
+            <label for="goalTitle">Goal Title <span class="required">*</span></label>
+            <input type="text" id="goalTitle" name="goalTitle"
+                   placeholder="A short, memorable name for your goal" maxlength="120" />
+            <div class="field-error">Goal title is required.</div>
+          </div>
+
+          <div class="form-group" id="fg-smartStatement">
+            <label for="smartStatement">SMART Goal Statement <span class="required">*</span></label>
+            <textarea id="smartStatement" name="smartStatement" rows="3"
+                      placeholder="By [date], I will [specific outcome] as measured by [metric]."></textarea>
+            <div class="field-error">SMART statement is required.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="whyItMatters">Why This Goal Matters to You</label>
+            <textarea id="whyItMatters" name="whyItMatters" rows="2"
+                      placeholder="What will achieving this goal make possible for you?"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" id="fg-goalCategory">
+              <label for="goalCategory">Category <span class="required">*</span></label>
+              <select id="goalCategory" name="goalCategory">
+                <option value="">Select a category</option>
+                <option value="skilling">Skilling / Learning</option>
+                <option value="certification">Certification or Training</option>
+                <option value="project">Visible Project or Work Contribution</option>
+                <option value="networking">Professional Networking</option>
+                <option value="work-outcome">Measurable Work Outcome</option>
+                <option value="leadership">Leadership Development</option>
+                <option value="other">Other (work-related)</option>
+              </select>
+              <div class="field-error">Please select a category.</div>
+            </div>
+            <div class="form-group">
+              <label for="dueDate">Target Completion Date</label>
+              <input type="date" id="dueDate" name="dueDate" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="successMetric">Success Metric</label>
+              <input type="text" id="successMetric" name="successMetric"
+                     placeholder="How will you know you have achieved it?" maxlength="120" />
+            </div>
+            <div class="form-group">
+              <label for="targetValue">Target Value</label>
+              <input type="text" id="targetValue" name="targetValue"
+                     placeholder="e.g. 1 certification, $3,000 saved" maxlength="80" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <div class="form-section-heading">Session 1 Check-In</div>
+
+          <div class="form-group" id="fg-firstAction">
+            <label for="firstAction">First Action Step <span class="required">*</span></label>
+            <input type="text" id="firstAction" name="firstAction"
+                   placeholder="The one thing you will do first to get started" maxlength="200" />
+            <div class="field-error">First action step is required.</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <div class="check-group">
+                <input type="checkbox" id="session1GoalSubmitted" name="session1GoalSubmitted" />
+                <label for="session1GoalSubmitted">Goal submitted to pod</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="check-group">
+                <input type="checkbox" id="session1FirstActionCompleted" name="session1FirstActionCompleted" />
+                <label for="session1FirstActionCompleted">First action completed</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="session1Notes">Session 1 Notes</label>
+            <textarea id="session1Notes" name="session1Notes" rows="2"
+                      placeholder="Any reflections or commitments from Session 1 ..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="managerConversationNeeded">Manager Conversation Needed?</label>
+              <select id="managerConversationNeeded" name="managerConversationNeeded">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="successFactorsGoalAdded">SuccessFactors Goal Added?</label>
+              <select id="successFactorsGoalAdded" name="successFactorsGoalAdded">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+                <option value="not-applicable">Not Applicable</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary" id="btn-save-s1">Save Session 1</button>
+          <span id="save-status-s1" style="font-size:12px;color:var(--color-text-muted)"></span>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- ----------------------------------------------------------------
+         Session 2 — Progress Check-In (Oct 22)
+    ---------------------------------------------------------------- -->
+    <div class="tab-panel" id="tab-session2">
+
+      <form id="form-session2" novalidate>
+
+        <div class="form-card">
+          <div class="form-section-heading">Progress Update</div>
+
+          <div class="form-group" id="fg-status">
+            <label for="status">Current Status <span class="required">*</span></label>
+            <select id="status" name="status">
+              <option value="">Select a status</option>
+              <option value="not-started">Not Started</option>
+              <option value="in-progress">In Progress</option>
+              <option value="on-track">On Track</option>
+              <option value="at-risk">At Risk</option>
+              <option value="blocked">Blocked</option>
+              <option value="completed">Completed</option>
+            </select>
+            <div class="field-error">Please select a status.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="percentComplete">Percent Complete</label>
+            <div class="slider-row">
+              <input type="range" id="percentComplete" name="percentComplete"
+                     min="0" max="100" step="5" value="0" />
+              <span class="slider-value" id="slider-display">0%</span>
+            </div>
+          </div>
+
+          <div class="form-group" id="fg-nextAction">
+            <label for="nextAction">Next Action Step <span class="required">*</span></label>
+            <input type="text" id="nextAction" name="nextAction"
+                   placeholder="What is your next best action?" maxlength="200" />
+            <div class="field-error">Next action step is required.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="evidenceOfProgress">Evidence of Progress</label>
+            <textarea id="evidenceOfProgress" name="evidenceOfProgress" rows="2"
+                      placeholder="What have you done so far? What evidence shows you are moving forward?"></textarea>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <div class="form-section-heading">Session 2 Check-In</div>
+
+          <div class="form-group">
+            <label for="session2Status">Session 2 Status Summary</label>
+            <select id="session2Status" name="session2Status">
+              <option value="">Select ...</option>
+              <option value="not-started">Not Started</option>
+              <option value="in-progress">In Progress</option>
+              <option value="on-track">On Track</option>
+              <option value="at-risk">At Risk</option>
+              <option value="blocked">Blocked</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="session2Blocker">Blocker (if any)</label>
+            <textarea id="session2Blocker" name="session2Blocker" rows="2"
+                      placeholder="What is getting in the way? Leave blank if none."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="session2CourseCorrection">Course Correction or Adjustment</label>
+            <textarea id="session2CourseCorrection" name="session2CourseCorrection" rows="2"
+                      placeholder="How are you adapting your approach?"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="supportNeeded">Support Needed from Pod</label>
+            <textarea id="supportNeeded" name="supportNeeded" rows="2"
+                      placeholder="What would be most helpful from your accountability pod?"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="session2Notes">Session 2 Notes</label>
+            <textarea id="session2Notes" name="session2Notes" rows="2"
+                      placeholder="Any reflections or commitments from Session 2 ..."></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary" id="btn-save-s2">Save Session 2</button>
+          <span id="save-status-s2" style="font-size:12px;color:var(--color-text-muted)"></span>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- ----------------------------------------------------------------
+         Session 3 — Final Showcase (Nov 12)
+    ---------------------------------------------------------------- -->
+    <div class="tab-panel" id="tab-session3">
+
+      <form id="form-session3" novalidate>
+
+        <div class="form-card">
+          <div class="form-section-heading">Final Results</div>
+
+          <div class="form-group" id="fg-session3FinalStatus">
+            <label for="session3FinalStatus">Final Status <span class="required">*</span></label>
+            <select id="session3FinalStatus" name="session3FinalStatus">
+              <option value="">Select a status</option>
+              <option value="not-started">Not Started</option>
+              <option value="in-progress">In Progress</option>
+              <option value="on-track">On Track</option>
+              <option value="at-risk">At Risk</option>
+              <option value="blocked">Blocked</option>
+              <option value="completed">Completed</option>
+            </select>
+            <div class="field-error">Please select a final status.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="session3Result">What Did You Achieve?</label>
+            <textarea id="session3Result" name="session3Result" rows="3"
+                      placeholder="Describe what you accomplished, even if the goal was not fully completed."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="session3LessonLearned">What Did You Learn?</label>
+            <textarea id="session3LessonLearned" name="session3LessonLearned" rows="2"
+                      placeholder="What is the most important thing this goal taught you?"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="session3NextChapter">What Is Your Next Chapter?</label>
+            <textarea id="session3NextChapter" name="session3NextChapter" rows="2"
+                      placeholder="What do you want to pursue next? What is your next goal or stretch?"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="session3Notes">Session 3 Notes</label>
+            <textarea id="session3Notes" name="session3Notes" rows="2"
+                      placeholder="Any final reflections from Session 3 ..."></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary" id="btn-save-s3">Save Session 3</button>
+          <span id="save-status-s3" style="font-size:12px;color:var(--color-text-muted)"></span>
+        </div>
+
+      </form>
+    </div>
+
+  </div><!-- /progress-view -->
+
+  <!-- Error state -->
+  <div class="state-panel" id="error-state" style="display:none">
+    <div class="state-panel__title">Unable to load your record</div>
+    <div class="state-panel__body" id="error-message"></div>
+    <a href="index.html" class="btn btn--ghost btn--sm">Back to Dashboard</a>
+  </div>
+
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =============================================================================
+// Configuration  — must match index.html
+// =============================================================================
+const CONFIG = {
+  cloudantUrl: "https://b27030c0-5465-4cb1-965c-41374f65525a-bluemix.cloudantnosqldb.appdomain.cloud",
+  iamToken:    window.__CLOUDANT_TOKEN__ || "",
+  apiKey:      (window.__K_HEAD__ && window.__K_REST__)
+                 ? (window.__K_HEAD__ + "-" + window.__K_REST__)
+                 : (window.__CLOUDANT_APIKEY__ || ""),
+};
+
+// =============================================================================
+// refreshIamToken — always-on, deploy-free token refresh
+// 1. Same-origin token.json  →  2. github.com raw URL (CORS: *)  →  3. baked-in token
+// After a fresh token is obtained, exchanges it for a Cloudant IAMSession cookie.
+// The cookie auto-renews on every Cloudant request — session never expires while open.
+// Called on load, every 5 min, and on tab focus.
+// =============================================================================
+const RAW_TOKEN_URL =
+  "https://raw.githubusercontent.com/jul3z08101/powerpod-dashboard/gh-pages/token.json";
+const TOKEN_MAX_AGE_S = 3000;
+
+async function fetchTokenJson(url) {
+  const res = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const tok = data.t_h && data.t_r ? (data.t_h + "." + data.t_r)
+            : data.access_token || "";
+  const age = data.built_at ? (Date.now() / 1000 - data.built_at) : 9999;
+  return (tok && age < TOKEN_MAX_AGE_S) ? tok : null;
+}
+
+async function refreshIamToken() {
+  try {
+    let tok = await fetchTokenJson("token.json").catch(() => null);
+    if (!tok) tok = await fetchTokenJson(RAW_TOKEN_URL).catch(() => null);
+    if (!tok) tok = CONFIG.iamToken;
+    if (tok) {
+      CONFIG.iamToken = tok;
+      await fetch(`${CONFIG.cloudantUrl}/_iam_session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: tok }),
+        credentials: "include",
+      }).catch(() => {});
+    }
+  } catch (_) { /* fall through to baked-in token */ }
+}
+
+refreshIamToken();
+
+// Re-fetch token.json every 5 minutes (in sync with refreshData)
+setInterval(() => {
+  if (document.visibilityState === "visible") refreshIamToken();
+}, 5 * 60 * 1000);
+
+// =============================================================================
+// Cloudant API wrapper
+// =============================================================================
+const Cloudant = {
+  headers() {
+    return {
+      "Authorization": `Bearer ${CONFIG.iamToken}`,
+      "Content-Type":  "application/json",
+    };
+  },
+
+  async get(db, id) {
+    const res = await fetch(`${CONFIG.cloudantUrl}/${db}/${id}`, { headers: this.headers(), credentials: "include" });
+    if (!res.ok) throw new Error(`Cloudant GET ${db}/${id}: HTTP ${res.status}`);
+    return res.json();
+  },
+
+  async put(db, id, doc) {
+    const res = await fetch(`${CONFIG.cloudantUrl}/${db}/${id}`, {
+      method:  "PUT",
+      headers: this.headers(),
+      body:    JSON.stringify(doc),
+      credentials: "include",
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.reason || `Cloudant PUT ${db}/${id}: HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+
+  async fetchAll(db) {
+    const url = `${CONFIG.cloudantUrl}/${db}/_all_docs?include_docs=true`;
+    const res = await fetch(url, { headers: this.headers(), credentials: "include" });
+    if (!res.ok) throw new Error(`Cloudant ${db}: HTTP ${res.status}`);
+    const data = await res.json();
+    return data.rows.map(r => r.doc);
+  },
+};
+
+// =============================================================================
+// Toast
+// =============================================================================
+let toastTimer = null;
+
+function showToast(msg, type = "") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "toast show" + (type ? " toast--" + type : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = "toast"; }, 3500);
+}
+
+// =============================================================================
+// Helpers
+// =============================================================================
+function initials(name) {
+  return name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
+}
+
+function formatName(name) {
+  // Returns "Firstname L." — first name + first initial of last name
+  if (!name) return "";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return parts[0] + " " + parts[parts.length - 1][0].toUpperCase() + ".";
+}
+
+function qs(id) { return document.getElementById(id); }
+
+function setVal(id, value) {
+  const el = qs(id);
+  if (!el) return;
+  if (el.type === "checkbox") {
+    el.checked = value === true || value === "true";
+  } else {
+    el.value = value !== undefined && value !== null ? value : "";
+  }
+}
+
+function getVal(id) {
+  const el = qs(id);
+  if (!el) return "";
+  if (el.type === "checkbox") return el.checked;
+  return el.value.trim();
+}
+
+// =============================================================================
+// Validation
+// =============================================================================
+function validateField(groupId, value) {
+  const group = qs(groupId);
+  if (!group) return true;
+  const ok = value !== "" && value !== null && value !== undefined;
+  group.classList.toggle("has-error", !ok);
+  return ok;
+}
+
+function clearErrors(ids) {
+  ids.forEach(id => { const g = qs(id); if (g) g.classList.remove("has-error"); });
+}
+
+// =============================================================================
+// Tabs
+// =============================================================================
+document.getElementById("session-tabs").addEventListener("click", e => {
+  const btn = e.target.closest(".tab-btn");
+  if (!btn) return;
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  btn.classList.add("active");
+  qs("tab-" + btn.dataset.tab).classList.add("active");
+});
+
+// =============================================================================
+// Percent slider
+// =============================================================================
+qs("percentComplete").addEventListener("input", function () {
+  qs("slider-display").textContent = this.value + "%";
+});
+
+// =============================================================================
+// State
+// =============================================================================
+let _participant = null;
+let _goal        = null;
+
+// =============================================================================
+// Populate form from loaded goal document
+// =============================================================================
+function populateForm(goal) {
+  // Session 1
+  setVal("goalTitle",                    goal.goalTitle);
+  setVal("smartStatement",               goal.smartStatement);
+  setVal("whyItMatters",                 goal.whyItMatters);
+  setVal("goalCategory",                 goal.goalCategory);
+  setVal("dueDate",                      goal.dueDate);
+  setVal("successMetric",                goal.successMetric);
+  setVal("targetValue",                  goal.targetValue);
+  setVal("firstAction",                  goal.firstAction);
+  setVal("session1GoalSubmitted",        goal.session1GoalSubmitted);
+  setVal("session1FirstActionCompleted", goal.session1FirstActionCompleted);
+  setVal("session1Notes",                goal.session1Notes);
+  setVal("managerConversationNeeded",    goal.managerConversationNeeded);
+  setVal("successFactorsGoalAdded",      goal.successFactorsGoalAdded);
+
+  // Session 2
+  setVal("status",                goal.status || "not-started");
+  setVal("percentComplete",       goal.percentComplete || 0);
+  qs("slider-display").textContent = (goal.percentComplete || 0) + "%";
+  setVal("nextAction",            goal.nextAction);
+  setVal("evidenceOfProgress",    goal.evidenceOfProgress);
+  setVal("session2Status",        goal.session2Status);
+  setVal("session2Blocker",       goal.session2Blocker);
+  setVal("session2CourseCorrection", goal.session2CourseCorrection);
+  setVal("supportNeeded",         goal.supportNeeded);
+  setVal("session2Notes",         goal.session2Notes);
+
+  // Session 3
+  setVal("session3FinalStatus",   goal.session3FinalStatus);
+  setVal("session3Result",        goal.session3Result);
+  setVal("session3LessonLearned", goal.session3LessonLearned);
+  setVal("session3NextChapter",   goal.session3NextChapter);
+  setVal("session3Notes",         goal.session3Notes);
+}
+
+// =============================================================================
+// Build updated goal document from form
+// =============================================================================
+function collectGoalDoc(existing) {
+  const now = new Date().toISOString();
+  return {
+    ...existing,
+    // Session 1
+    goalTitle:                    getVal("goalTitle"),
+    smartStatement:               getVal("smartStatement"),
+    whyItMatters:                 getVal("whyItMatters"),
+    goalCategory:                 getVal("goalCategory"),
+    dueDate:                      getVal("dueDate"),
+    successMetric:                getVal("successMetric"),
+    targetValue:                  getVal("targetValue"),
+    firstAction:                  getVal("firstAction"),
+    session1GoalSubmitted:        getVal("session1GoalSubmitted"),
+    session1FirstActionCompleted: getVal("session1FirstActionCompleted"),
+    session1Notes:                getVal("session1Notes"),
+    managerConversationNeeded:    getVal("managerConversationNeeded") === "true",
+    successFactorsGoalAdded:      getVal("successFactorsGoalAdded"),
+    // Session 2
+    status:                    getVal("status") || "not-started",
+    percentComplete:           parseInt(getVal("percentComplete"), 10) || 0,
+    nextAction:                getVal("nextAction"),
+    evidenceOfProgress:        getVal("evidenceOfProgress"),
+    session2Status:            getVal("session2Status"),
+    session2Blocker:           getVal("session2Blocker"),
+    session2CourseCorrection:  getVal("session2CourseCorrection"),
+    supportNeeded:             getVal("supportNeeded"),
+    session2Notes:             getVal("session2Notes"),
+    // Session 3
+    session3FinalStatus:    getVal("session3FinalStatus"),
+    session3Result:         getVal("session3Result"),
+    session3LessonLearned:  getVal("session3LessonLearned"),
+    session3NextChapter:    getVal("session3NextChapter"),
+    session3Notes:          getVal("session3Notes"),
+    lastUpdated: now,
+  };
+}
+
+// =============================================================================
+// Save helpers
+// =============================================================================
+async function saveGoal(btnId, statusId) {
+  const btn    = qs(btnId);
+  const status = qs(statusId);
+  btn.disabled = true;
+  status.textContent = "Saving ...";
+
+  try {
+    const updated = collectGoalDoc(_goal);
+    const result  = await Cloudant.put("goals", _goal._id, updated);
+    _goal = { ...updated, _rev: result.rev };
+    status.textContent = "Saved";
+    showToast("Progress saved.", "success");
+    setTimeout(() => { status.textContent = ""; }, 3000);
+  } catch (err) {
+    status.textContent = "Save failed";
+    showToast("Could not save: " + err.message, "error");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// =============================================================================
+// Form submit handlers
+// =============================================================================
+qs("form-session1").addEventListener("submit", e => {
+  e.preventDefault();
+  clearErrors(["fg-goalTitle", "fg-smartStatement", "fg-goalCategory", "fg-firstAction"]);
+  const ok = [
+    validateField("fg-goalTitle",       getVal("goalTitle")),
+    validateField("fg-smartStatement",  getVal("smartStatement")),
+    validateField("fg-goalCategory",    getVal("goalCategory")),
+    validateField("fg-firstAction",     getVal("firstAction")),
+  ].every(Boolean);
+  if (ok) saveGoal("btn-save-s1", "save-status-s1");
+});
+
+qs("form-session2").addEventListener("submit", e => {
+  e.preventDefault();
+  clearErrors(["fg-status", "fg-nextAction"]);
+  const ok = [
+    validateField("fg-status",     getVal("status")),
+    validateField("fg-nextAction", getVal("nextAction")),
+  ].every(Boolean);
+  if (ok) saveGoal("btn-save-s2", "save-status-s2");
+});
+
+qs("form-session3").addEventListener("submit", e => {
+  e.preventDefault();
+  clearErrors(["fg-session3FinalStatus"]);
+  const ok = validateField("fg-session3FinalStatus", getVal("session3FinalStatus"));
+  if (ok) saveGoal("btn-save-s3", "save-status-s3");
+});
+
+// =============================================================================
+// Participant selector (no ?id= in URL)
+// =============================================================================
+
+// Pod filter dropdown — populates member dropdown when a pod is selected
+function wirePodFilter(pods, participants) {
+  const podSel  = qs("pod-select-filter");
+  const memSel  = qs("participant-select");
+
+  // Populate pod options
+  pods.sort((a, b) => a.podId.localeCompare(b.podId)).forEach(pod => {
+    const opt = document.createElement("option");
+    opt.value       = pod._id;
+    opt.textContent = pod.name;
+    podSel.appendChild(opt);
+  });
+
+  podSel.addEventListener("change", () => {
+    const podId = podSel.value;
+    // Reset member select
+    memSel.innerHTML = '<option value="">Step 2 — Select your name ...</option>';
+    if (!podId) { memSel.style.display = "none"; return; }
+
+    const members = participants
+      .filter(p => p.podId === podId)
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    members.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value       = p._id;
+      opt.textContent = formatName(p.name);
+      memSel.appendChild(opt);
+    });
+
+    memSel.style.display = "block";
+  });
+}
+
+qs("btn-select-participant").addEventListener("click", () => {
+  const sel = qs("participant-select");
+  const id  = sel.value;
+  if (!id) { sel.focus(); return; }
+  window.location.href = `progress.html?id=${encodeURIComponent(id)}`;
+});
+
+// =============================================================================
+// Render identity card
+// =============================================================================
+function renderIdentity(participant, pod) {
+  const card = qs("identity-card");
+  card.innerHTML = `
+    <div class="identity-avatar">${initials(participant.name)}</div>
+    <div class="identity-info">
+      <div class="identity-info__name">${formatName(participant.name)}</div>
+      <div class="identity-info__meta">
+        <span>Pod: ${participant.podName || pod.name || ""}</span>
+        <span>${participant.podRole || ""}</span>
+      </div>
+    </div>`;
+}
+
+// =============================================================================
+// Bootstrap
+// =============================================================================
+async function init() {
+  const loading     = qs("loading-state");
+  const selectorView = qs("selector-view");
+  const progressView = qs("progress-view");
+  const errorState  = qs("error-state");
+  const errorMsg    = qs("error-message");
+
+  if (!CONFIG.iamToken) {
+    loading.style.display    = "none";
+    errorState.style.display = "flex";
+    errorMsg.textContent =
+      "No Cloudant authentication token is configured. " +
+      "Set window.__CLOUDANT_TOKEN__ in the build step or deployment config.";
+    return;
+  }
+
+  const params        = new URLSearchParams(window.location.search);
+  const participantId = params.get("id");
+
+  try {
+    if (!participantId) {
+      // Show the pod → member selector populated from Cloudant
+      const [participants, pods] = await Promise.all([
+        Cloudant.fetchAll("participants"),
+        Cloudant.fetchAll("pods"),
+      ]);
+
+      const filteredParticipants = participants.filter(p => p.type === "participant");
+      const filteredPods         = pods.filter(p => p.type === "pod");
+
+      wirePodFilter(filteredPods, filteredParticipants);
+
+      loading.style.display      = "none";
+      selectorView.style.display = "block";
+      return;
+    }
+
+    // Load participant, their pod, and their goal in parallel
+    const [participant, allPods, goal] = await Promise.all([
+      Cloudant.get("participants", participantId),
+      Cloudant.fetchAll("pods"),
+      Cloudant.get("goals", "G-" + participantId.replace(/^P-/, "")),
+    ]);
+
+    const pod = allPods.find(p => p._id === participant.podId) || {};
+
+    _participant = participant;
+    _goal        = goal;
+
+    loading.style.display      = "none";
+    progressView.style.display = "block";
+
+    renderIdentity(participant, pod);
+    populateForm(goal);
+
+  } catch (err) {
+    loading.style.display    = "none";
+    errorState.style.display = "flex";
+    errorMsg.textContent = err.message || "An unexpected error occurred.";
+  }
+}
+
+// Await token refresh before loading data — prevents 401 after w3 re-login.
+refreshIamToken().then(init);
+</script>
+</body>
+</html>
