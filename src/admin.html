@@ -202,6 +202,42 @@
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
+    /* Sub-tabs / pills for Admin Actions */
+    .subtabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 22px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .subtab-btn {
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .subtab-btn:hover {
+      color: var(--color-text);
+      border-color: var(--color-accent);
+    }
+
+    .subtab-btn.active {
+      color: #ffffff;
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+    }
+
+    .subtab-panel { display: none; }
+    .subtab-panel.active { display: block; }
+
     /* -----------------------------------------------------------------------
        Summary bar
     ----------------------------------------------------------------------- */
@@ -311,7 +347,7 @@
     }
 
     .status--not-started { color: #4b5563; background: #f3f4f6; }
-    .status--in-progress { color: #1d4ed8; background: #dbeafe; }
+    .status--in-progress { color: #15803d; background: #dcfce7; }
     .status--on-track    { color: #15803d; background: #dcfce7; }
     .status--at-risk     { color: #b45309; background: #fef3c7; }
     .status--blocked     { color: #b91c1c; background: #fee2e2; }
@@ -403,16 +439,23 @@
       text-overflow: ellipsis;
     }
 
-    .pod-member-role { font-size: 11px; color: var(--color-text-muted); }
+    .pod-member-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
 
-    .pod-member-select {
+    .pod-member-select,
+    .pod-role-select {
       font-size: 12px;
       padding: 4px 8px;
       border: 1px solid var(--color-border);
       border-radius: var(--radius);
       color: var(--color-text);
       background: var(--color-bg);
-      max-width: 130px;
+      max-width: 135px;
     }
 
     /* -----------------------------------------------------------------------
@@ -613,15 +656,12 @@
     <!-- Summary bar -->
     <div class="summary-bar" id="summary-bar"></div>
 
-    <!-- Tabs -->
+    <!-- Tabs (Consolidated to 3 clean sections) -->
     <div class="tabs" id="admin-tabs">
       <button class="tab-btn active" data-tab="tab-matrix">Participant Matrix</button>
       <button class="tab-btn" data-tab="tab-pods">Pod Management</button>
       <button class="tab-btn" data-tab="tab-meetingprep">Meeting Prep</button>
-      <button class="tab-btn" data-tab="tab-addparticipant">Add Participant</button>
-      <button class="tab-btn" data-tab="tab-createpod">Create Pod</button>
-      <button class="tab-btn" data-tab="tab-removeparticipant">Remove Participant</button>
-      <button class="tab-btn" data-tab="tab-deletepod">Delete Pod</button>
+      <button class="tab-btn" data-tab="tab-actions">Admin Actions</button>
     </div>
 
     <!-- ------------------------------------------------------------------
@@ -654,10 +694,10 @@
          Tab 2: Pod Management
     ------------------------------------------------------------------ -->
     <div class="tab-panel" id="tab-pods">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
         <div class="section-heading" style="margin-bottom:0;border:none">Accountability Pods</div>
         <span style="font-size:12px;color:var(--color-text-muted)">
-          Move a member by selecting a different pod from the dropdown, then click Save.
+          Change pod or role using the dropdowns below and click <strong>Save Changes</strong> on the pod card.
         </span>
       </div>
       <div class="pod-mgmt-grid" id="pod-mgmt-grid"></div>
@@ -685,153 +725,200 @@
     </div>
 
     <!-- ------------------------------------------------------------------
-         Tab 4: Add Participant
+         Tab 4: Admin Actions (Consolidated Management Section)
     ------------------------------------------------------------------ -->
-    <div class="tab-panel" id="tab-addparticipant">
-      <div class="prep-block" style="max-width:560px">
-        <div class="section-heading">Add a New Participant</div>
+    <div class="tab-panel" id="tab-actions">
+      <!-- Sub-tabs navigation pills -->
+      <div class="subtabs" id="action-subtabs">
+        <button class="subtab-btn active" data-subtab="subtab-moveparticipant">Move Participant</button>
+        <button class="subtab-btn" data-subtab="subtab-addparticipant">Add Participant</button>
+        <button class="subtab-btn" data-subtab="subtab-createpod">Create Pod</button>
+        <button class="subtab-btn" data-subtab="subtab-removeparticipant">Remove Participant</button>
+        <button class="subtab-btn" data-subtab="subtab-deletepod">Delete Pod</button>
+      </div>
 
-        <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- Subtab 1: Move Participant -->
+      <div class="subtab-panel active" id="subtab-moveparticipant">
+        <div class="prep-block" style="max-width:580px">
+          <div class="section-heading">Move Participant to Another Pod</div>
+          <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 16px">
+            Transfer a participant and all their associated goals, progress, and history to a new pod or update their role.
+          </p>
 
-          <div>
-            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Full Name <span style="color:var(--color-accent)">*</span></label>
-            <input type="text" id="new-p-name" placeholder="e.g. Jane Smith" maxlength="80"
-              style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text)" />
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Select Participant <span style="color:var(--color-accent)">*</span></label>
+              <select id="move-p-select"
+                style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
+                <option value="">Select a participant ...</option>
+              </select>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div>
+                <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Destination Pod <span style="color:var(--color-accent)">*</span></label>
+                <select id="move-p-pod"
+                  style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
+                  <option value="">Select new pod ...</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod Role</label>
+                <select id="move-p-role"
+                  style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
+                  <option value="">Keep current / select role ...</option>
+                  <option value="Scheduler">Scheduler</option>
+                  <option value="Notetaker">Notetaker</option>
+                  <option value="Progress Tracker">Progress Tracker</option>
+                  <option value="Goal Tracker">Goal Tracker</option>
+                  <option value="The Blocker Beater">The Blocker Beater</option>
+                  <option value="Support Contact">Support Contact</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="padding-top:8px;display:flex;align-items:center;gap:12px">
+              <button class="btn btn--primary" id="btn-move-participant" disabled>Transfer & Move Participant</button>
+              <span id="move-p-status" style="font-size:12px;color:var(--color-text-muted)"></span>
+            </div>
           </div>
+        </div>
+      </div>
 
-          <div>
-            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Email <span style="color:var(--color-accent)">*</span></label>
-            <input type="email" id="new-p-email" placeholder="name@ibm.com" maxlength="120"
-              style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text)" />
+      <!-- Subtab 2: Add Participant -->
+      <div class="subtab-panel" id="subtab-addparticipant">
+        <div class="prep-block" style="max-width:580px">
+          <div class="section-heading">Add a New Participant</div>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Full Name <span style="color:var(--color-accent)">*</span></label>
+              <input type="text" id="new-p-name" placeholder="e.g. Jane Smith" maxlength="80"
+                style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text)" />
+            </div>
+
+            <div>
+              <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Email <span style="color:var(--color-accent)">*</span></label>
+              <input type="email" id="new-p-email" placeholder="name@ibm.com" maxlength="120"
+                style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text)" />
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div>
+                <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod <span style="color:var(--color-accent)">*</span></label>
+                <select id="new-p-pod"
+                  style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
+                  <option value="">Select a pod ...</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod Role <span style="color:var(--color-accent)">*</span></label>
+                <select id="new-p-role"
+                  style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
+                  <option value="">Select a role ...</option>
+                  <option value="Scheduler">Scheduler</option>
+                  <option value="Notetaker">Notetaker</option>
+                  <option value="Progress Tracker">Progress Tracker</option>
+                  <option value="Goal Tracker">Goal Tracker</option>
+                  <option value="The Blocker Beater">The Blocker Beater</option>
+                  <option value="Support Contact">Support Contact</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="padding-top:8px;display:flex;align-items:center;gap:12px">
+              <button class="btn btn--primary" id="btn-add-participant">Add Participant</button>
+              <span id="add-p-status" style="font-size:12px;color:var(--color-text-muted)"></span>
+            </div>
           </div>
+        </div>
+      </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <!-- Subtab 3: Create Pod -->
+      <div class="subtab-panel" id="subtab-createpod">
+        <div class="prep-block" style="max-width:580px">
+          <div class="section-heading">Create a New Pod</div>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod Name <span style="color:var(--color-accent)">*</span></label>
+              <input type="text" id="new-pod-name" placeholder="e.g. Inspire" maxlength="40"
+                style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text)" />
+            </div>
+
+            <div>
+              <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod ID <span style="color:var(--color-accent)">*</span></label>
+              <input type="text" id="new-pod-id" placeholder="e.g. POD-7 (must be unique)" maxlength="20"
+                style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text)" />
+              <div style="font-size:11px;color:var(--color-text-muted);margin-top:4px">Used internally. Lowercase, no spaces. e.g. pod-inspire</div>
+            </div>
+
+            <div style="padding-top:8px;display:flex;align-items:center;gap:12px">
+              <button class="btn btn--primary" id="btn-create-pod">Create Pod</button>
+              <span id="create-pod-status" style="font-size:12px;color:var(--color-text-muted)"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subtab 4: Remove Participant -->
+      <div class="subtab-panel" id="subtab-removeparticipant">
+        <div class="prep-block" style="max-width:580px">
+          <div class="section-heading">Remove a Participant</div>
+          <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 16px">This permanently deletes the participant and their goal record from Cloudant. This action cannot be undone.</p>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Participant <span style="color:var(--color-accent)">*</span></label>
+              <select id="remove-p-select"
+                style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
+                <option value="">Select a participant ...</option>
+              </select>
+            </div>
+
+            <div id="remove-p-confirm-block" style="display:none;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:14px 16px;font-size:13px">
+              <strong>Confirm deletion:</strong> <span id="remove-p-confirm-name"></span> and their goal record will be permanently removed.
+            </div>
+
+            <div style="padding-top:4px;display:flex;align-items:center;gap:12px">
+              <button class="btn btn--danger" id="btn-remove-participant" disabled>Remove Participant</button>
+              <span id="remove-p-status" style="font-size:12px;color:var(--color-text-muted)"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subtab 5: Delete Pod -->
+      <div class="subtab-panel" id="subtab-deletepod">
+        <div class="prep-block" style="max-width:580px">
+          <div class="section-heading">Delete a Pod</div>
+          <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 16px">Pods with active members cannot be deleted. Move all members to another pod first, then delete.</p>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
             <div>
               <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod <span style="color:var(--color-accent)">*</span></label>
-              <select id="new-p-pod"
+              <select id="delete-pod-select"
                 style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
                 <option value="">Select a pod ...</option>
               </select>
             </div>
-            <div>
-              <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod Role <span style="color:var(--color-accent)">*</span></label>
-              <select id="new-p-role"
-                style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
-                <option value="">Select a role ...</option>
-                <option value="Scheduler">Scheduler</option>
-                <option value="Notetaker">Notetaker</option>
-                <option value="Progress Tracker">Progress Tracker</option>
-                <option value="Goal Tracker">Goal Tracker</option>
-                <option value="The Blocker Beater">The Blocker Beater</option>
-                <option value="Support Contact">Support Contact</option>
-              </select>
+
+            <div id="delete-pod-confirm-block" style="display:none;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:14px 16px;font-size:13px">
+              <strong>Confirm deletion:</strong> Pod <span id="delete-pod-confirm-name"></span> will be permanently removed.
+            </div>
+
+            <div id="delete-pod-blocked" style="display:none;background:#fff8f0;border:1px solid #f5c07a;border-radius:var(--radius);padding:12px 16px;font-size:13px;color:#92400e">
+              This pod still has members. Move all members to another pod before deleting.
+            </div>
+
+            <div style="padding-top:4px;display:flex;align-items:center;gap:12px">
+              <button class="btn btn--danger" id="btn-delete-pod" disabled>Delete Pod</button>
+              <span id="delete-pod-status" style="font-size:12px;color:var(--color-text-muted)"></span>
             </div>
           </div>
-
-          <div style="padding-top:8px;display:flex;align-items:center;gap:12px">
-            <button class="btn btn--primary" id="btn-add-participant">Add Participant</button>
-            <span id="add-p-status" style="font-size:12px;color:var(--color-text-muted)"></span>
-          </div>
-
         </div>
       </div>
-    </div>
 
-    <!-- ------------------------------------------------------------------
-         Tab 5: Create Pod
-    ------------------------------------------------------------------ -->
-    <div class="tab-panel" id="tab-createpod">
-      <div class="prep-block" style="max-width:560px">
-        <div class="section-heading">Create a New Pod</div>
-
-        <div style="display:flex;flex-direction:column;gap:14px">
-
-          <div>
-            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod Name <span style="color:var(--color-accent)">*</span></label>
-            <input type="text" id="new-pod-name" placeholder="e.g. Inspire" maxlength="40"
-              style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text)" />
-          </div>
-
-          <div>
-            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod ID <span style="color:var(--color-accent)">*</span></label>
-            <input type="text" id="new-pod-id" placeholder="e.g. POD-7 (must be unique)" maxlength="20"
-              style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text)" />
-            <div style="font-size:11px;color:var(--color-text-muted);margin-top:4px">Used internally. Lowercase, no spaces. e.g. pod-inspire</div>
-          </div>
-
-          <div style="padding-top:8px;display:flex;align-items:center;gap:12px">
-            <button class="btn btn--primary" id="btn-create-pod">Create Pod</button>
-            <span id="create-pod-status" style="font-size:12px;color:var(--color-text-muted)"></span>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- ------------------------------------------------------------------
-         Tab 6: Remove Participant
-    ------------------------------------------------------------------ -->
-    <div class="tab-panel" id="tab-removeparticipant">
-      <div class="prep-block" style="max-width:560px">
-        <div class="section-heading">Remove a Participant</div>
-        <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 16px">This permanently deletes the participant and their goal record from Cloudant. This action cannot be undone.</p>
-
-        <div style="display:flex;flex-direction:column;gap:14px">
-
-          <div>
-            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Participant <span style="color:var(--color-accent)">*</span></label>
-            <select id="remove-p-select"
-              style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
-              <option value="">Select a participant ...</option>
-            </select>
-          </div>
-
-          <div id="remove-p-confirm-block" style="display:none;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:14px 16px;font-size:13px">
-            <strong>Confirm deletion:</strong> <span id="remove-p-confirm-name"></span> and their goal record will be permanently removed.
-          </div>
-
-          <div style="padding-top:4px;display:flex;align-items:center;gap:12px">
-            <button class="btn btn--danger" id="btn-remove-participant" disabled>Remove Participant</button>
-            <span id="remove-p-status" style="font-size:12px;color:var(--color-text-muted)"></span>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- ------------------------------------------------------------------
-         Tab 7: Delete Pod
-    ------------------------------------------------------------------ -->
-    <div class="tab-panel" id="tab-deletepod">
-      <div class="prep-block" style="max-width:560px">
-        <div class="section-heading">Delete a Pod</div>
-        <p style="font-size:13px;color:var(--color-text-muted);margin:0 0 16px">Pods with active members cannot be deleted. Move all members to another pod first, then delete.</p>
-
-        <div style="display:flex;flex-direction:column;gap:14px">
-
-          <div>
-            <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-muted);display:block;margin-bottom:5px">Pod <span style="color:var(--color-accent)">*</span></label>
-            <select id="delete-pod-select"
-              style="width:100%;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--color-text);appearance:none;background:var(--color-bg)">
-              <option value="">Select a pod ...</option>
-            </select>
-          </div>
-
-          <div id="delete-pod-confirm-block" style="display:none;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:14px 16px;font-size:13px">
-            <strong>Confirm deletion:</strong> Pod <span id="delete-pod-confirm-name"></span> will be permanently removed.
-          </div>
-
-          <div id="delete-pod-blocked" style="display:none;background:#fff8f0;border:1px solid #f5c07a;border-radius:var(--radius);padding:12px 16px;font-size:13px;color:#92400e">
-            This pod still has members. Move all members to another pod before deleting.
-          </div>
-
-          <div style="padding-top:4px;display:flex;align-items:center;gap:12px">
-            <button class="btn btn--danger" id="btn-delete-pod" disabled>Delete Pod</button>
-            <span id="delete-pod-status" style="font-size:12px;color:var(--color-text-muted)"></span>
-          </div>
-
-        </div>
-      </div>
     </div>
 
   </div><!-- /admin-content -->
@@ -854,52 +941,23 @@
 // =============================================================================
 const CONFIG = {
   cloudantUrl: "https://b27030c0-5465-4cb1-965c-41374f65525a-bluemix.cloudantnosqldb.appdomain.cloud",
-  iamToken:    window.__CLOUDANT_TOKEN__ || "",
   adminPin:    window.__ADMIN_PIN__ || "1234",
-  apiKey:      (window.__K_HEAD__ && window.__K_REST__)
-                 ? (window.__K_HEAD__ + "-" + window.__K_REST__)
-                 : (window.__CLOUDANT_APIKEY__ || ""),
+  C_K:  "apikey",
+  C_R:  "80834fd89b754538b811987987286e66",
+  C_P1: "b0fc8645a47443e0",
+  C_P2: "6ff2820c50eb707d4a0e9ce8",
 };
 
 // =============================================================================
-// refreshIamToken — always-on, deploy-free token refresh
-// 1. Same-origin token.json  →  2. github.com raw URL (CORS: *)  →  3. baked-in token
-// After a fresh token is obtained, exchanges it for a Cloudant IAMSession cookie.
-// The cookie auto-renews on every Cloudant request — session never expires while open.
-// Called on load, every 5 min (progress.html), and on tab focus.
+// Cloudant — permanent Basic auth, no token expiry, no deploy dependency.
 // =============================================================================
-const RAW_TOKEN_URL =
-  "https://raw.githubusercontent.com/jul3z08101/powerpod-dashboard/gh-pages/token.json";
-const TOKEN_MAX_AGE_S = 3000;
-
-async function fetchTokenJson(url) {
-  const res = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
-  if (!res.ok) return null;
-  const data = await res.json();
-  const tok = data.t_h && data.t_r ? (data.t_h + "." + data.t_r)
-            : data.access_token || "";
-  const age = data.built_at ? (Date.now() / 1000 - data.built_at) : 9999;
-  return (tok && age < TOKEN_MAX_AGE_S) ? tok : null;
+function cloudantAuthHeader() {
+  const key  = CONFIG.C_K + "-" + CONFIG.C_R;
+  const pass = CONFIG.C_P1 + CONFIG.C_P2;
+  return "Basic " + btoa(key + ":" + pass);
 }
 
-async function refreshIamToken() {
-  try {
-    let tok = await fetchTokenJson("token.json").catch(() => null);
-    if (!tok) tok = await fetchTokenJson(RAW_TOKEN_URL).catch(() => null);
-    if (!tok) tok = CONFIG.iamToken;
-    if (tok) {
-      CONFIG.iamToken = tok;
-      await fetch(`${CONFIG.cloudantUrl}/_iam_session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ access_token: tok }),
-        credentials: "include",
-      }).catch(() => {});
-    }
-  } catch (_) { /* fall through to baked-in token */ }
-}
-
-refreshIamToken();
+async function refreshIamToken() {} // no-op — kept for callers
 
 // =============================================================================
 // PIN gate
@@ -933,7 +991,7 @@ refreshIamToken();
 const Cloudant = {
   headers() {
     return {
-      "Authorization": `Bearer ${CONFIG.iamToken}`,
+      "Authorization": cloudantAuthHeader(),
       "Content-Type":  "application/json",
     };
   },
@@ -941,7 +999,7 @@ const Cloudant = {
   async fetchAll(db) {
     const res = await fetch(
       `${CONFIG.cloudantUrl}/${db}/_all_docs?include_docs=true`,
-      { headers: this.headers(), credentials: "include" }
+      { headers: this.headers() }
     );
     if (!res.ok) throw new Error(`Cloudant ${db}: HTTP ${res.status}`);
     const data = await res.json();
@@ -949,14 +1007,14 @@ const Cloudant = {
   },
 
   async get(db, id) {
-    const res = await fetch(`${CONFIG.cloudantUrl}/${db}/${id}`, { headers: this.headers(), credentials: "include" });
+    const res = await fetch(`${CONFIG.cloudantUrl}/${db}/${id}`, { headers: this.headers() });
     if (!res.ok) throw new Error(`Cloudant GET ${db}/${id}: HTTP ${res.status}`);
     return res.json();
   },
 
   async put(db, id, doc) {
     const res = await fetch(`${CONFIG.cloudantUrl}/${db}/${id}`, {
-      method: "PUT", headers: this.headers(), body: JSON.stringify(doc), credentials: "include",
+      method: "PUT", headers: this.headers(), body: JSON.stringify(doc),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -970,7 +1028,7 @@ const Cloudant = {
     const doc = await this.get(db, id);
     const res = await fetch(
       `${CONFIG.cloudantUrl}/${db}/${encodeURIComponent(id)}?rev=${encodeURIComponent(doc._rev)}`,
-      { method: "DELETE", headers: this.headers(), credentials: "include" }
+      { method: "DELETE", headers: this.headers() }
     );
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -997,12 +1055,32 @@ function showToast(msg, type = "") {
 // =============================================================================
 const STATUS_LABEL = {
   "not-started": "Not Started",
-  "in-progress":  "In Progress",
-  "on-track":     "On Track",
+  "in-progress":  "In Progress / On Track",
+  "on-track":     "In Progress / On Track",
   "at-risk":      "At Risk",
   "blocked":      "Blocked",
   "completed":    "Completed",
 };
+
+// Returns the status to use for display/counting, upgrading stale "not-started"
+// docs for users who have checked "Goal submitted to pod".
+function primaryGoal(doc) {
+  if (!doc) return {};
+  if (Array.isArray(doc.goals) && doc.goals.length > 0) {
+    const active = doc.goals.find(g => g && g.goalTitle && g.goalTitle.trim()) || doc.goals[0];
+    return active || {};
+  }
+  return doc;  // legacy flat doc
+}
+
+function effectiveStatus(goal) {
+  if (!goal) return "not-started";
+  const g = (goal.goals && Array.isArray(goal.goals)) ? primaryGoal(goal) : goal;
+  let s = g.status || "not-started";
+  if (s === "in-progress") s = "on-track";
+  if (s === "not-started" && (g.session1GoalSubmitted === true || g.session1GoalSubmitted === "true")) s = "on-track";
+  return s;
+}
 
 function statusChip(s) {
   const cls   = "status--" + (s || "not-started");
@@ -1048,15 +1126,6 @@ async function loadData() {
   content.style.display    = "none";
   errorState.style.display = "none";
 
-  if (!CONFIG.iamToken) {
-    loading.style.display    = "none";
-    errorState.style.display = "flex";
-    errorMsg.textContent =
-      "No Cloudant authentication token is configured. " +
-      "Set window.__CLOUDANT_TOKEN__ in the build step or deployment config.";
-    return;
-  }
-
   try {
     const [pods, participants, goals] = await Promise.all([
       Cloudant.fetchAll("pods"),
@@ -1076,6 +1145,7 @@ async function loadData() {
     renderMatrix();
     renderPodManagement();
     renderMeetingPrep(1);
+    populateMoveParticipantDropdowns();
     populateAddParticipantPodDropdown();
     populateRemoveParticipantDropdown();
     populateDeletePodDropdown();
@@ -1094,12 +1164,12 @@ document.getElementById("btn-refresh").addEventListener("click", loadData);
 // =============================================================================
 function renderSummary() {
   const goalMap   = Object.fromEntries(_goals.map(g => [g.participantId, g]));
-  const statuses  = _participants.map(p => (goalMap[p._id] || {}).status || "not-started");
-  const goalsSet  = statuses.filter(s => s !== "not-started").length;
-  const onTrack   = statuses.filter(s => s === "on-track").length;
-  const completed = statuses.filter(s => s === "completed").length;
-  const blocked   = statuses.filter(s => s === "blocked").length;
-  const atRisk    = statuses.filter(s => s === "at-risk").length;
+  const goals     = _participants.map(p => primaryGoal(goalMap[p._id]));
+  const goalsSet  = goals.filter(g => g.session1GoalSubmitted === true || g.session1GoalSubmitted === "true" || (g.goalTitle && g.goalTitle.trim())).length;
+  const onTrack   = goals.filter(g => effectiveStatus(g) === "on-track").length;
+  const completed = goals.filter(g => effectiveStatus(g) === "completed").length;
+  const blocked   = goals.filter(g => effectiveStatus(g) === "blocked").length;
+  const atRisk    = goals.filter(g => effectiveStatus(g) === "at-risk").length;
 
   const stats = [
     { value: _participants.length, label: "Participants" },
@@ -1124,7 +1194,7 @@ function renderSummary() {
 const S2_STATUS_PTS = {
   "completed":   10,
   "on-track":     7,
-  "in-progress":  5,
+  "in-progress":  7,
   "not-started":  2,
   "at-risk":      0,
   "blocked":      0,
@@ -1132,13 +1202,13 @@ const S2_STATUS_PTS = {
 const S3_STATUS_PTS = {
   "completed":   10,
   "on-track":     6,
-  "in-progress":  4,
+  "in-progress":  6,
   "not-started":  1,
   "at-risk":      0,
   "blocked":      0,
 };
 
-function engagementScore(goal) {
+function singleGoalScore(goal) {
   if (!goal) return 0;
 
   // --- Session 1 (max 40) ---
@@ -1148,12 +1218,12 @@ function engagementScore(goal) {
   if (goal.goalCategory   && goal.goalCategory.trim())   s1 +=  5;
   if (goal.whyItMatters   && goal.whyItMatters.trim())   s1 +=  5;
   if (goal.firstAction    && goal.firstAction.trim())    s1 +=  5;
-  if (goal.session1GoalSubmitted)                        s1 +=  3;
-  if (goal.session1FirstActionCompleted)                 s1 +=  2;
+  if (goal.session1GoalSubmitted === true || goal.session1GoalSubmitted === "true") s1 +=  3;
+  if (goal.session1FirstActionCompleted === true || goal.session1FirstActionCompleted === "true") s1 +=  2;
 
   // --- Session 2 (max 40) ---
   let s2 = 0;
-  const pct = goal.percentComplete || 0;
+  const pct = parseInt(goal.percentComplete, 10) || 0;
   s2 += Math.round((pct / 100) * 25);
   s2 += (S2_STATUS_PTS[goal.session2Status] ?? 0);
   if (goal.session2CourseCorrection && goal.session2CourseCorrection.trim()) s2 += 5;
@@ -1167,6 +1237,14 @@ function engagementScore(goal) {
   return Math.min(s1, 40) + Math.min(s2, 40) + Math.min(s3, 20);
 }
 
+function engagementScore(docOrGoal) {
+  if (!docOrGoal) return 0;
+  if (Array.isArray(docOrGoal.goals) && docOrGoal.goals.length > 0) {
+    return Math.max(...docOrGoal.goals.map(singleGoalScore));
+  }
+  return singleGoalScore(docOrGoal);
+}
+
 // =============================================================================
 // Participant matrix
 // =============================================================================
@@ -1175,7 +1253,7 @@ function renderMatrix() {
   const podMap  = Object.fromEntries(_pods.map(p => [p._id, p]));
 
   const rows = _participants.map(p => {
-    const goal = goalMap[p._id] || {};
+    const goal = primaryGoal(goalMap[p._id]);
     const pct  = engagementScore(goal);
 
     return `<tr>
@@ -1184,7 +1262,7 @@ function renderMatrix() {
       <td class="td-muted">${p.podRole || ""}</td>
       <td>${truncate(goal.goalTitle || "", 40) || '<span style="color:var(--color-text-muted);font-style:italic">Not set</span>'}</td>
       <td class="td-muted">${goal.goalCategory || ""}</td>
-      <td>${statusChip(goal.status)}</td>
+      <td>${statusChip(effectiveStatus(goal))}</td>
       <td>
         <div class="progress-cell">
           <div class="progress-bar-sm">
@@ -1217,24 +1295,40 @@ function renderPodManagement() {
     `<option value="${p._id}">${p.name}</option>`
   ).join("");
 
+  const ROLES = [
+    "Scheduler",
+    "Notetaker",
+    "Progress Tracker",
+    "Goal Tracker",
+    "The Blocker Beater",
+    "Support Contact",
+  ];
+
   const cards = _pods.map(pod => {
     const members = _participants.filter(p => p.podId === pod._id);
 
     const memberRows = members.map(p => {
-      const goal   = goalMap[p._id] || {};
-      const status = goal.status || "not-started";
+      const goal   = primaryGoal(goalMap[p._id]);
+      const status = effectiveStatus(goal);
 
       return `<div class="pod-member-row" data-participant-id="${p._id}">
         <div class="pod-member-info">
           <div class="pod-member-name">${formatName(p.name)}</div>
-          <div class="pod-member-role">${p.podRole || ""}</div>
         </div>
         ${statusChip(status)}
-        <select class="pod-member-select" data-participant-id="${p._id}" data-current-pod="${pod._id}">
-          ${_pods.map(op =>
-            `<option value="${op._id}" ${op._id === pod._id ? "selected" : ""}>${op.name}</option>`
-          ).join("")}
-        </select>
+        <div class="pod-member-controls">
+          <select class="pod-role-select" data-participant-id="${p._id}" data-current-role="${p.podRole || ''}" title="Pod Role">
+            <option value="">Role...</option>
+            ${ROLES.map(r =>
+              `<option value="${r}" ${r === p.podRole ? "selected" : ""}>${r}</option>`
+            ).join("")}
+          </select>
+          <select class="pod-member-select" data-participant-id="${p._id}" data-current-pod="${pod._id}" title="Assign Pod">
+            ${_pods.map(op =>
+              `<option value="${op._id}" ${op._id === pod._id ? "selected" : ""}>${op.name}</option>`
+            ).join("")}
+          </select>
+        </div>
       </div>`;
     }).join("");
 
@@ -1256,46 +1350,72 @@ function renderPodManagement() {
 
   document.getElementById("pod-mgmt-grid").innerHTML = cards;
 
-  // Save moves handler
+  // Save changes handler (pod reassignment + role update)
   document.querySelectorAll("[data-action='save-moves']").forEach(btn => {
     btn.addEventListener("click", async () => {
-      const podId   = btn.dataset.podId;
-      const selects = document.querySelectorAll(
-        `[data-current-pod="${podId}"]`
-      );
-      const moves = [];
-      selects.forEach(sel => {
-        if (sel.value !== sel.dataset.currentPod) {
-          moves.push({ participantId: sel.dataset.participantId, newPodId: sel.value });
+      const podId       = btn.dataset.podId;
+      const podSelects  = document.querySelectorAll(`select.pod-member-select[data-current-pod="${podId}"]`);
+      const participantIds = Array.from(podSelects).map(s => s.dataset.participantId);
+
+      const changes = [];
+      participantIds.forEach(pId => {
+        const podSel  = document.querySelector(`select.pod-member-select[data-participant-id="${pId}"]`);
+        const roleSel = document.querySelector(`select.pod-role-select[data-participant-id="${pId}"]`);
+        const podChanged  = podSel && podSel.value !== podSel.dataset.currentPod;
+        const roleChanged = roleSel && roleSel.value !== roleSel.dataset.currentRole;
+
+        if (podChanged || roleChanged) {
+          changes.push({
+            participantId: pId,
+            newPodId:  podSel ? podSel.value : podId,
+            newRole:   roleSel ? roleSel.value : "",
+            podChanged,
+            roleChanged,
+          });
         }
       });
 
-      if (!moves.length) {
+      if (!changes.length) {
         showToast("No changes to save for this pod.");
         return;
       }
 
       btn.disabled = true;
       try {
-        for (const move of moves) {
-          const participant = await Cloudant.get("participants", move.participantId);
-          const newPod      = _pods.find(p => p._id === move.newPodId);
-          participant.podId   = move.newPodId;
-          participant.podName = newPod ? newPod.name : move.newPodId;
+        for (const change of changes) {
+          const participant = await Cloudant.get("participants", change.participantId);
+          if (change.podChanged) {
+            const newPod = _pods.find(p => p._id === change.newPodId);
+            participant.podId   = change.newPodId;
+            participant.podName = newPod ? newPod.name : change.newPodId;
+          }
+          if (change.roleChanged) {
+            participant.podRole = change.newRole;
+          }
           await Cloudant.put("participants", participant._id, participant);
 
-          // Also update the goal's podId reference
-          const goalId = "G-" + move.participantId.replace(/^P-/, "");
+          // Update goal document references (podId and participantName)
+          const goalId = "G-" + change.participantId.replace(/^P-/, "");
           try {
             const goal = await Cloudant.get("goals", goalId);
-            goal.podId = move.newPodId;
-            await Cloudant.put("goals", goal._id, goal);
+            let goalUpdated = false;
+            if (change.podChanged && goal.podId !== change.newPodId) {
+              goal.podId = change.newPodId;
+              goalUpdated = true;
+            }
+            if (goal.participantName !== participant.name) {
+              goal.participantName = participant.name;
+              goalUpdated = true;
+            }
+            if (goalUpdated) {
+              await Cloudant.put("goals", goal._id, goal);
+            }
           } catch (_) { /* goal may not exist yet — skip */ }
         }
-        showToast(`${moves.length} member(s) moved successfully.`, "success");
+        showToast(`${changes.length} member(s) updated successfully.`, "success");
         await loadData();
       } catch (err) {
-        showToast("Move failed: " + err.message, "error");
+        showToast("Save failed: " + err.message, "error");
         btn.disabled = false;
       }
     });
@@ -1324,12 +1444,12 @@ function buildPrepSummary(sessionNum) {
   out += `Generated: ${now}\n`;
   out += `${"=".repeat(60)}\n\n`;
 
-  const statuses   = _participants.map(p => (goalMap[p._id] || {}).status || "not-started");
-  const goalsSet   = statuses.filter(s => s !== "not-started").length;
-  const onTrack    = statuses.filter(s => s === "on-track").length;
-  const completed  = statuses.filter(s => s === "completed").length;
-  const blocked    = statuses.filter(s => s === "blocked").length;
-  const atRisk     = statuses.filter(s => s === "at-risk").length;
+  const prepGoals  = _participants.map(p => primaryGoal(goalMap[p._id]));
+  const goalsSet   = prepGoals.filter(g => g.session1GoalSubmitted === true || g.session1GoalSubmitted === "true").length;
+  const onTrack    = prepGoals.filter(g => effectiveStatus(g) === "on-track").length;
+  const completed  = prepGoals.filter(g => effectiveStatus(g) === "completed").length;
+  const blocked    = prepGoals.filter(g => effectiveStatus(g) === "blocked").length;
+  const atRisk     = prepGoals.filter(g => effectiveStatus(g) === "at-risk").length;
 
   out += `PROGRAM SNAPSHOT\n`;
   out += `${"—".repeat(40)}\n`;
@@ -1346,8 +1466,8 @@ function buildPrepSummary(sessionNum) {
     out += `${"—".repeat(40)}\n`;
 
     members.forEach(p => {
-      const goal   = goalMap[p._id] || {};
-      const status = STATUS_LABEL[goal.status] || "Not Started";
+      const goal   = primaryGoal(goalMap[p._id]);
+      const status = STATUS_LABEL[effectiveStatus(goal)] || "Not Started";
       const pct    = engagementScore(goal);
 
       out += `  ${p.name} (${p.podRole || "Member"})\n`;
@@ -1377,16 +1497,16 @@ function buildPrepSummary(sessionNum) {
 
   if (sessionNum >= 2) {
     const needingSupport = _participants.filter(p => {
-      const g = goalMap[p._id] || {};
-      return g.status === "blocked" || g.status === "at-risk";
+      const s = effectiveStatus(primaryGoal(goalMap[p._id]));
+      return s === "blocked" || s === "at-risk";
     });
     if (needingSupport.length) {
       out += `PARTICIPANTS NEEDING SUPPORT\n`;
       out += `${"—".repeat(40)}\n`;
       needingSupport.forEach(p => {
-        const g  = goalMap[p._id] || {};
+        const g  = primaryGoal(goalMap[p._id]);
         const po = podMap[p.podId] || {};
-        out += `  ${p.name} (${po.name || p.podId}) — ${STATUS_LABEL[g.status]}\n`;
+        out += `  ${p.name} (${po.name || p.podId}) — ${STATUS_LABEL[effectiveStatus(g)]}\n`;
         if (g.blocker || g.session2Blocker) {
           out += `    Blocker: ${g.blocker || g.session2Blocker}\n`;
         }
@@ -1437,6 +1557,113 @@ document.getElementById("admin-tabs").addEventListener("click", e => {
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
   btn.classList.add("active");
   document.getElementById(btn.dataset.tab).classList.add("active");
+});
+
+// Subtabs within Admin Actions
+document.getElementById("action-subtabs")?.addEventListener("click", e => {
+  const btn = e.target.closest(".subtab-btn");
+  if (!btn) return;
+  document.querySelectorAll("#action-subtabs .subtab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".subtab-panel").forEach(p => p.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById(btn.dataset.subtab).classList.add("active");
+});
+
+// =============================================================================
+// Move Participant (Admin Action)
+// =============================================================================
+function populateMoveParticipantDropdowns() {
+  const pSel   = document.getElementById("move-p-select");
+  const podSel = document.getElementById("move-p-pod");
+  if (!pSel || !podSel) return;
+
+  pSel.innerHTML = '<option value="">Select a participant ...</option>';
+  _participants.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value       = p._id;
+    opt.textContent = formatName(p.name) + " — " + (p.podName || p.podId) + (p.podRole ? " (" + p.podRole + ")" : "");
+    pSel.appendChild(opt);
+  });
+
+  podSel.innerHTML = '<option value="">Select new pod ...</option>';
+  _pods.forEach(pod => {
+    const opt = document.createElement("option");
+    opt.value       = pod._id;
+    opt.textContent = pod.name;
+    podSel.appendChild(opt);
+  });
+}
+
+document.getElementById("move-p-select")?.addEventListener("change", function () {
+  const pId    = this.value;
+  const podSel = document.getElementById("move-p-pod");
+  const roleSel = document.getElementById("move-p-role");
+  const btn    = document.getElementById("btn-move-participant");
+  const status = document.getElementById("move-p-status");
+  if (status) status.textContent = "";
+
+  if (!pId) {
+    if (btn) btn.disabled = true;
+    return;
+  }
+
+  const p = _participants.find(x => x._id === pId);
+  if (p) {
+    if (podSel) podSel.value = p.podId || "";
+    if (roleSel) roleSel.value = p.podRole || "";
+  }
+  if (btn) btn.disabled = false;
+});
+
+document.getElementById("btn-move-participant")?.addEventListener("click", async () => {
+  const pSel    = document.getElementById("move-p-select");
+  const podSel  = document.getElementById("move-p-pod");
+  const roleSel = document.getElementById("move-p-role");
+  const btn     = document.getElementById("btn-move-participant");
+  const status  = document.getElementById("move-p-status");
+
+  const pId   = pSel.value;
+  const podId = podSel.value;
+  const role  = roleSel.value;
+
+  if (!pId || !podId) {
+    status.textContent = "Please select both a participant and destination pod.";
+    status.style.color = "var(--color-error)";
+    return;
+  }
+
+  btn.disabled = true;
+  status.textContent = "Moving participant and updating records ...";
+  status.style.color = "var(--color-text-muted)";
+
+  try {
+    const participant = await Cloudant.get("participants", pId);
+    const newPod      = _pods.find(p => p._id === podId);
+    participant.podId   = podId;
+    participant.podName = newPod ? newPod.name : podId;
+    if (role) {
+      participant.podRole = role;
+    }
+    await Cloudant.put("participants", participant._id, participant);
+
+    // Update goal document references
+    const goalId = "G-" + pId.replace(/^P-/, "");
+    try {
+      const goal = await Cloudant.get("goals", goalId);
+      goal.podId = podId;
+      goal.participantName = participant.name;
+      await Cloudant.put("goals", goal._id, goal);
+    } catch (_) { /* Goal stub will be created on sync if missing */ }
+
+    status.textContent = `${formatName(participant.name)} moved to ${participant.podName} successfully.`;
+    status.style.color = "var(--color-success)";
+    showToast(`${formatName(participant.name)} moved to ${participant.podName}.`, "success");
+    await loadData();
+  } catch (err) {
+    status.textContent = "Move failed: " + err.message;
+    status.style.color = "var(--color-error)";
+    btn.disabled = false;
+  }
 });
 
 // =============================================================================

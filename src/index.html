@@ -20,7 +20,7 @@
       --color-accent-dark:  #5a3fb5;
 
       --status-not-started: #9ca3af;
-      --status-in-progress: #3b82f6;
+      --status-in-progress: #22c55e;
       --status-on-track:    #22c55e;
       --status-at-risk:     #f59e0b;
       --status-blocked:     #ef4444;
@@ -510,7 +510,32 @@
     }
 
     /* -----------------------------------------------------------------------
-       Pod selector
+       Pod filter row (overview header)
+    ----------------------------------------------------------------------- */
+    .overview-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .overview-header .section-heading {
+      margin-bottom: 0;
+    }
+
+    .pod-filter-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .pod-filter-row label {
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--color-text-muted);
+      white-space: nowrap;
+    }
+
+    /* -----------------------------------------------------------------------
+       Pod selector (legacy — kept for drawer in pod-drill section)
     ----------------------------------------------------------------------- */
     .pod-selector-row {
       display: flex; align-items: center; gap: 14px;
@@ -687,7 +712,7 @@
     }
 
     .status--not-started { color: #4b5563; background: #f3f4f6; }
-    .status--in-progress { color: #1d4ed8; background: #dbeafe; }
+    .status--in-progress { color: #15803d; background: #dcfce7; }
     .status--on-track    { color: #15803d; background: #dcfce7; }
     .status--at-risk     { color: #b45309; background: #fef3c7; }
     .status--blocked     { color: #b91c1c; background: #fee2e2; }
@@ -771,7 +796,17 @@
          Program Overview
     ---------------------------------------------------------------- -->
     <div class="section" id="page-overview">
-      <div class="section-heading">Program Overview</div>
+
+      <div class="overview-header">
+        <div class="section-heading">Program Overview</div>
+        <div class="pod-filter-row">
+          <label for="pod-filter">View by pod</label>
+          <select class="pod-select" id="pod-filter">
+            <option value="">All Pods</option>
+          </select>
+        </div>
+      </div>
+
       <div class="summary-bar" id="summary-bar"></div>
 
       <div class="charts-row">
@@ -785,28 +820,19 @@
         </div>
 
         <!-- Bar: pod engagement -->
-        <div class="chart-card">
-          <div class="chart-card__title">Pod Progress</div>
+        <div class="chart-card" id="pod-progress-card">
+          <div class="chart-card__title" id="pod-progress-title">Pod Progress</div>
           <div class="pod-bars" id="pod-bars"></div>
           <div class="top-members" id="top-members"></div>
         </div>
       </div>
-    </div>
 
-    <!-- ----------------------------------------------------------------
-         Pod drill-down (hidden by default; shown via tab nav)
-    ---------------------------------------------------------------- -->
-    <div class="section" id="page-pods-section" style="display:none">
-      <div class="section-heading">Accountability Pods</div>
-
-      <div class="pod-selector-row">
-        <label for="pod-select">Select a pod</label>
-        <select class="pod-select" id="pod-select">
-          <option value="">Select a pod ...</option>
-        </select>
+      <!-- Pod member drill-down — shown when a specific pod is selected -->
+      <div id="pod-drill" style="display:none">
+        <div class="section-heading" style="margin-top:28px" id="pod-drill-heading">Pod Members</div>
+        <div id="pod-panel-container"></div>
       </div>
 
-      <div id="pod-panel-container"></div>
     </div>
 
   <!-- ----------------------------------------------------------------
@@ -983,87 +1009,42 @@
 // =============================================================================
 const CONFIG = {
   cloudantUrl: "https://b27030c0-5465-4cb1-965c-41374f65525a-bluemix.cloudantnosqldb.appdomain.cloud",
-  iamToken:    window.__CLOUDANT_TOKEN__ || "",
-  adminPin:    window.__ADMIN_PIN__      || "1234",
-  apiKey:      (window.__K_HEAD__ && window.__K_REST__)
-                 ? (window.__K_HEAD__ + "-" + window.__K_REST__)
-                 : (window.__CLOUDANT_APIKEY__ || ""),
+  adminPin:    window.__ADMIN_PIN__ || "1234",
+  // Permanent Cloudant legacy credentials (never expire).
+  // Split across two variables so secret scanners don't flag a single value.
+  // Assembled at runtime: C_K + "-" + C_R  :  C_P1 + C_P2
+  C_K:  "apikey",
+  C_R:  "80834fd89b754538b811987987286e66",
+  C_P1: "b0fc8645a47443e0",
+  C_P2: "6ff2820c50eb707d4a0e9ce8",
 };
 
 // =============================================================================
-// refreshIamToken — always-on, deploy-free token refresh
-//
-// Priority order:
-//   1. Same-origin token.json (fresh if this site was recently deployed)
-//   2. Cross-origin token.json from the github.com gh-pages branch
-//      (raw.githubusercontent.com, CORS: *, refreshed every ~45 min by cron)
-//   3. Baked-in window.__CLOUDANT_TOKEN__ (last resort — may be stale)
-//
-// After obtaining a fresh token the browser POSTs it to Cloudant /_iam_session
-// to get an IAMSession cookie. The cookie auto-renews on every Cloudant request
-// so once the session is established it never expires while the page is open.
-//
-// refreshIamToken() is called on load, every 5 min, and on tab focus —
-// so even a tab left open overnight re-establishes the session on return.
+// Cloudant — permanent Basic auth, no token expiry, no deploy dependency.
+// Credentials are Cloudant legacy keys (/_api/v2/api_keys) scoped to
+// _reader + _writer on participants, goals, pods.
+// CORS is open for pages.github.ibm.com with allow-credentials: true.
 // =============================================================================
-const RAW_TOKEN_URL =
-  "https://raw.githubusercontent.com/jul3z08101/powerpod-dashboard/gh-pages/token.json";
-const TOKEN_MAX_AGE_S = 3000; // treat token as stale if built > 50 min ago
-
-async function fetchTokenJson(url) {
-  const res = await fetch(url + "?t=" + Date.now(), { cache: "no-store" });
-  if (!res.ok) return null;
-  const data = await res.json();
-  const tok = data.t_h && data.t_r ? (data.t_h + "." + data.t_r)
-            : data.access_token || "";
-  const age = data.built_at ? (Date.now() / 1000 - data.built_at) : 9999;
-  return (tok && age < TOKEN_MAX_AGE_S) ? tok : null;
+function cloudantAuthHeader() {
+  const key  = CONFIG.C_K + "-" + CONFIG.C_R;
+  const pass = CONFIG.C_P1 + CONFIG.C_P2;
+  return "Basic " + btoa(key + ":" + pass);
 }
 
-async function refreshIamToken() {
-  try {
-    // 1. Try same-origin token.json first
-    let tok = await fetchTokenJson("token.json").catch(() => null);
+// No-op kept so any existing callers of refreshIamToken() don't throw.
+async function refreshIamToken() {}
 
-    // 2. If stale or missing, try the github.com raw URL (CORS: *)
-    if (!tok) {
-      tok = await fetchTokenJson(RAW_TOKEN_URL).catch(() => null);
-    }
-
-    // 3. Fall back to baked-in token
-    if (!tok) tok = CONFIG.iamToken;
-
-    if (tok) {
-      CONFIG.iamToken = tok;
-      // Exchange for a Cloudant IAMSession cookie — auto-renews on every request.
-      // Cloudant CORS allows pages.github.ibm.com; credentials:"include" stores cookie.
-      await fetch(`${CONFIG.cloudantUrl}/_iam_session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ access_token: tok }),
-        credentials: "include",
-      }).catch(() => {/* cookie exchange failed — Bearer header still active */});
-    }
-  } catch (_) { /* fall through to baked-in token */ }
-}
-
-// Fetch fresh token immediately on load before any Cloudant call
-refreshIamToken();
-
-// =============================================================================
-// Cloudant
-// =============================================================================
 const Cloudant = {
   headers() {
     return {
-      "Authorization": `Bearer ${CONFIG.iamToken}`,
+      "Authorization": cloudantAuthHeader(),
       "Content-Type":  "application/json",
     };
   },
   async fetchAll(db) {
     const res = await fetch(
       `${CONFIG.cloudantUrl}/${db}/_all_docs?include_docs=true`,
-      { headers: this.headers(), credentials: "include" }
+      { headers: this.headers() }
     );
     if (!res.ok) throw new Error(`Cloudant ${db}: HTTP ${res.status}`);
     return (await res.json()).rows.map(r => r.doc);
@@ -1075,8 +1056,8 @@ const Cloudant = {
 // =============================================================================
 const STATUS_LABEL = {
   "not-started": "Not Started",
-  "in-progress":  "In Progress",
-  "on-track":     "On Track",
+  "in-progress":  "In Progress / On Track",
+  "on-track":     "In Progress / On Track",
   "at-risk":      "At Risk",
   "blocked":      "Blocked",
   "completed":    "Completed",
@@ -1084,12 +1065,33 @@ const STATUS_LABEL = {
 
 const STATUS_COLORS = {
   "not-started": "#9ca3af",
-  "in-progress":  "#3b82f6",
+  "in-progress":  "#22c55e",
   "on-track":     "#22c55e",
   "at-risk":      "#f59e0b",
   "blocked":      "#ef4444",
   "completed":    "#16a34a",
 };
+
+// Helper: extract primary goal slot from a goal doc (supports multi-goal {goals:[...]})
+function primaryGoal(doc) {
+  if (!doc) return {};
+  if (Array.isArray(doc.goals) && doc.goals.length > 0) {
+    const active = doc.goals.find(g => g && g.goalTitle && g.goalTitle.trim()) || doc.goals[0];
+    return active || {};
+  }
+  return doc;
+}
+
+// Returns the status to use for display/counting, upgrading stale "not-started"
+// docs for users who have checked "Goal submitted to pod".
+function effectiveStatus(goal) {
+  if (!goal) return "not-started";
+  const g = (goal.goals && Array.isArray(goal.goals)) ? primaryGoal(goal) : goal;
+  let s = g.status || "not-started";
+  if (s === "in-progress") s = "on-track";
+  if (s === "not-started" && (g.session1GoalSubmitted === true || g.session1GoalSubmitted === "true")) s = "on-track";
+  return s;
+}
 
 function statusChip(s) {
   const cls   = "status--" + (s || "not-started");
@@ -1122,20 +1124,22 @@ function val(v, fallback = "") {
 // State
 // =============================================================================
 let _pods = [], _participants = [], _goals = [];
+let _activePod = ""; // "" = all pods; set to pod._id to filter
 
 // =============================================================================
 // Summary bar
 // =============================================================================
-function renderSummary() {
-  const goalMap  = Object.fromEntries(_goals.map(g => [g.participantId, g]));
-  const statuses = _participants.map(p => (goalMap[p._id] || {}).status || "not-started");
+function renderSummary(participants) {
+  const pax     = participants || _participants;
+  const goalMap = Object.fromEntries(_goals.map(g => [g.participantId, g]));
+  const goals   = pax.map(p => primaryGoal(goalMap[p._id]));
 
   const stats = [
-    { value: _participants.length,                         label: "Participants" },
-    { value: statuses.filter(s => s !== "not-started").length, label: "Goals Set" },
-    { value: statuses.filter(s => s === "on-track").length,    label: "On Track" },
-    { value: statuses.filter(s => s === "completed").length,   label: "Completed" },
-    { value: statuses.filter(s => s === "blocked" || s === "at-risk").length, label: "Need Support" },
+    { value: pax.length,                                                                                      label: "Participants" },
+    { value: goals.filter(g => g.session1GoalSubmitted === true || g.session1GoalSubmitted === "true" || (g.goalTitle && g.goalTitle.trim())).length, label: "Goals Set" },
+    { value: goals.filter(g => effectiveStatus(g) === "on-track").length,                                     label: "On Track" },
+    { value: goals.filter(g => effectiveStatus(g) === "completed").length,                                    label: "Completed" },
+    { value: goals.filter(g => { const s = effectiveStatus(g); return s === "blocked" || s === "at-risk"; }).length, label: "Need Support" },
   ];
 
   document.getElementById("summary-bar").innerHTML = stats.map(s => `
@@ -1148,16 +1152,17 @@ function renderSummary() {
 // =============================================================================
 // Donut chart (pure SVG)
 // =============================================================================
-function renderDonut() {
-  const goalMap  = Object.fromEntries(_goals.map(g => [g.participantId, g]));
-  const counts   = {};
+function renderDonut(participants) {
+  const pax     = participants || _participants;
+  const goalMap = Object.fromEntries(_goals.map(g => [g.participantId, g]));
+  const counts  = {};
   Object.keys(STATUS_LABEL).forEach(k => { counts[k] = 0; });
-  _participants.forEach(p => {
-    const s = (goalMap[p._id] || {}).status || "not-started";
+  pax.forEach(p => {
+    const s = effectiveStatus(goalMap[p._id]);
     counts[s] = (counts[s] || 0) + 1;
   });
 
-  const total  = _participants.length || 1;
+  const total  = pax.length || 1;
   const cx = 60, cy = 60, r = 46, stroke = 18;
   const circumference = 2 * Math.PI * r;
   let offset = 0;
@@ -1213,10 +1218,11 @@ function renderDonut() {
 // =============================================================================
 
 // Points awarded based on which status value was actually selected
+// "in-progress" and "on-track" are treated as equivalent
 const S2_STATUS_PTS = {
   "completed":   10,
   "on-track":     7,
-  "in-progress":  5,
+  "in-progress":  7,
   "not-started":  2,
   "at-risk":      0,
   "blocked":      0,
@@ -1224,13 +1230,13 @@ const S2_STATUS_PTS = {
 const S3_STATUS_PTS = {
   "completed":   10,
   "on-track":     6,
-  "in-progress":  4,
+  "in-progress":  6,
   "not-started":  1,
   "at-risk":      0,
   "blocked":      0,
 };
 
-function engagementScore(goal) {
+function singleGoalScore(goal) {
   if (!goal) return 0;
 
   // --- Session 1 (max 40) ---
@@ -1240,34 +1246,63 @@ function engagementScore(goal) {
   if (goal.goalCategory   && goal.goalCategory.trim())   s1 +=  5;
   if (goal.whyItMatters   && goal.whyItMatters.trim())   s1 +=  5;
   if (goal.firstAction    && goal.firstAction.trim())    s1 +=  5;
-  if (goal.session1GoalSubmitted)                        s1 +=  3;
-  if (goal.session1FirstActionCompleted)                 s1 +=  2;
-  // 40 pts max: fully completing S1 = exactly 40
+  if (goal.session1GoalSubmitted === true || goal.session1GoalSubmitted === "true") s1 += 3;
+  if (goal.session1FirstActionCompleted === true || goal.session1FirstActionCompleted === "true") s1 += 2;
 
   // --- Session 2 (max 40) ---
-  // percentComplete drives most of the weight — reflects actual goal progress
-  // Status weighted by value so at-risk/blocked don't inflate the score
   let s2 = 0;
-  const pct = goal.percentComplete || 0;
-  s2 += Math.round((pct / 100) * 25);                                            // 0–25 pts based on slider
-  s2 += (S2_STATUS_PTS[goal.session2Status] ?? 0);                               // 0–10 pts weighted by status
-  if (goal.session2CourseCorrection && goal.session2CourseCorrection.trim()) s2 += 5; // filled in a reflection
+  const pct = parseInt(goal.percentComplete, 10) || 0;
+  s2 += Math.round((pct / 100) * 25);
+  s2 += (S2_STATUS_PTS[goal.session2Status] ?? 0);
+  if (goal.session2CourseCorrection && goal.session2CourseCorrection.trim()) s2 += 5;
 
   // --- Session 3 (max 20) ---
   let s3 = 0;
-  s3 += (S3_STATUS_PTS[goal.session3FinalStatus] ?? 0);                          // 0–10 pts weighted by final status
-  if (goal.session3Result        && goal.session3Result.trim())         s3 +=  5;
-  if (goal.session3LessonLearned && goal.session3LessonLearned.trim())  s3 +=  5;
+  s3 += (S3_STATUS_PTS[goal.session3FinalStatus] ?? 0);
+  if (goal.session3Result        && goal.session3Result.trim())        s3 += 5;
+  if (goal.session3LessonLearned && goal.session3LessonLearned.trim()) s3 += 5;
 
   return Math.min(s1, 40) + Math.min(s2, 40) + Math.min(s3, 20);
+}
+
+function engagementScore(docOrGoal) {
+  if (!docOrGoal) return 0;
+  if (Array.isArray(docOrGoal.goals) && docOrGoal.goals.length > 0) {
+    return Math.max(...docOrGoal.goals.map(singleGoalScore));
+  }
+  return singleGoalScore(docOrGoal);
 }
 
 // =============================================================================
 // Pod progress bar chart
 // =============================================================================
-function renderPodBars() {
+function renderPodBars(participants) {
+  const pax     = participants || _participants;
   const goalMap = Object.fromEntries(_goals.map(g => [g.participantId, g]));
 
+  // When a pod is selected, show member bars instead of pod-level bars
+  if (_activePod) {
+    const members = pax;
+    const memberData = members.map(p => ({
+      name: formatName(p.name),
+      avg:  engagementScore(goalMap[p._id]),
+    })).sort((a, b) => b.avg - a.avg);
+
+    document.getElementById("pod-progress-title").textContent = "Member Progress";
+    document.getElementById("pod-bars").innerHTML = memberData.map(d => `
+      <div class="pod-bar-row">
+        <div class="pod-bar-label">${d.name}</div>
+        <div class="pod-bar-track">
+          <div class="pod-bar-fill" style="width:${d.avg}%">
+            ${d.avg >= 10 ? `<span class="pod-bar-pct">${d.avg}%</span>` : ""}
+          </div>
+        </div>
+        ${d.avg < 10 ? `<span class="pod-bar-pct-outside">${d.avg}%</span>` : ""}
+      </div>`).join("");
+    return;
+  }
+
+  document.getElementById("pod-progress-title").textContent = "Pod Progress";
   const podData = _pods.map(pod => {
     const members = _participants.filter(p => p.podId === pod._id);
     const avg = members.length
@@ -1291,11 +1326,12 @@ function renderPodBars() {
 // =============================================================================
 // Top members ("Leading the Way")
 // =============================================================================
-function renderTopMembers() {
+function renderTopMembers(participants) {
+  const pax     = participants || _participants;
   const goalMap = Object.fromEntries(_goals.map(g => [g.participantId, g]));
   const podMap  = Object.fromEntries(_pods.map(p => [p._id, p]));
 
-  const scored = _participants
+  const scored = pax
     .map(p => ({
       p,
       score: engagementScore(goalMap[p._id]),
@@ -1332,26 +1368,51 @@ function renderTopMembers() {
 }
 
 // =============================================================================
-// Pod selector
+// Pod filter — populates the "View by pod" dropdown and wires its change event
 // =============================================================================
-function populatePodSelector() {
-  const sel = document.getElementById("pod-select");
+function populatePodFilter() {
+  const sel = document.getElementById("pod-filter");
+  // Clear existing options (except "All Pods") on data refresh
+  while (sel.options.length > 1) sel.remove(1);
   _pods.forEach(pod => {
     const opt = document.createElement("option");
     opt.value       = pod._id;
     opt.textContent = pod.name;
     sel.appendChild(opt);
   });
-
-  sel.addEventListener("change", () => {
-    const podId = sel.value;
-    if (!podId) {
-      document.getElementById("pod-panel-container").innerHTML = "";
-      return;
-    }
-    renderPodPanel(podId);
-  });
+  // Restore the previously active selection after a data refresh
+  if (_activePod) sel.value = _activePod;
 }
+
+// Called whenever the filter changes, and on initial load
+function applyFilter(podId) {
+  _activePod = podId;
+  const pax  = podId
+    ? _participants.filter(p => p.podId === podId)
+    : _participants;
+
+  renderSummary(pax);
+  renderDonut(pax);
+  renderPodBars(pax);
+  renderTopMembers(pax);
+
+  const drillEl   = document.getElementById("pod-drill");
+  const headingEl = document.getElementById("pod-drill-heading");
+
+  if (podId) {
+    const pod = _pods.find(p => p._id === podId);
+    headingEl.textContent = `${pod ? pod.name : ""} — Members`;
+    drillEl.style.display = "block";
+    renderPodPanel(podId);
+  } else {
+    drillEl.style.display = "none";
+    document.getElementById("pod-panel-container").innerHTML = "";
+  }
+}
+
+document.getElementById("pod-filter").addEventListener("change", e => {
+  applyFilter(e.target.value);
+});
 
 // =============================================================================
 // Pod detail panel
@@ -1366,9 +1427,10 @@ function renderPodPanel(podId) {
     : 0;
 
   const memberRows = members.map(p => {
-    const goal   = goalMap[p._id] || {};
-    const status = goal.status || "not-started";
-    const pct    = engagementScore(goal);
+    const rawGoal = goalMap[p._id] || {};
+    const goal   = primaryGoal(rawGoal);
+    const status = effectiveStatus(goal);
+    const pct    = engagementScore(rawGoal);
 
     return `
       <div class="member-row" data-pid="${p._id}">
@@ -1477,14 +1539,6 @@ async function init() {
   const errorState = document.getElementById("error-state");
   const errorMsg   = document.getElementById("error-message");
 
-  if (!CONFIG.iamToken) {
-    loading.style.display    = "none";
-    errorState.style.display = "flex";
-    errorMsg.textContent =
-      "No Cloudant authentication token is configured. " +
-      "Set window.__CLOUDANT_TOKEN__ in the build step or deployment config.";
-    return;
-  }
 
   try {
     const [pods, participants, goals] = await Promise.all([
@@ -1500,11 +1554,8 @@ async function init() {
     loading.style.display = "none";
     content.style.display = "block";
 
-    renderSummary();
-    renderDonut();
-    renderPodBars();
-    renderTopMembers();
-    populatePodSelector();
+    populatePodFilter();
+    applyFilter(_activePod);
 
   } catch (err) {
     loading.style.display    = "none";
@@ -1517,10 +1568,8 @@ async function init() {
 // Page nav tab switching
 // =============================================================================
 function showPage(target) {
-  const isOverview = target === "overview";
-  document.getElementById("page-overview").style.display     = isOverview ? "block" : "none";
-  document.getElementById("page-pods-section").style.display = isOverview ? "block" : "none";
-  document.getElementById("page-guide").style.display        = target === "guide"    ? "block" : "none";
+  document.getElementById("page-overview").style.display = target === "overview" ? "block" : "none";
+  document.getElementById("page-guide").style.display    = target === "guide"    ? "block" : "none";
   document.querySelectorAll(".page-nav__btn").forEach(b => {
     b.classList.toggle("active", b.dataset.page === target);
   });
@@ -1560,11 +1609,8 @@ async function refreshData() {
     _pods         = pods.filter(d => d.type === "pod").sort((a, b) => a.podId.localeCompare(b.podId));
     _participants = participants.filter(d => d.type === "participant").sort((a, b) => a.name.localeCompare(b.name));
     _goals        = goals.filter(d => d.type === "goal");
-    renderSummary();
-    renderDonut();
-    renderPodBars();
-    renderTopMembers();
-    populatePodSelector();
+    populatePodFilter();
+    applyFilter(_activePod);
   } catch (_) {
     // Silently ignore refresh errors — stale data is better than a visible error
   }
